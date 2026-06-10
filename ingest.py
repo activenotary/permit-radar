@@ -114,4 +114,19 @@ def main():
         ccfg = CFG["cities"][ck]
         if args.fixture:
             records = json.loads(Path(args.fixture).read_text())
-            print(f
+            print(f"[{ck}] fixture: {len(records)} records")
+        else:
+            try:
+                days = ccfg.get("lookback_days", args.days)
+                records = fetch_live(ck, ccfg, days)
+                print(f"[{ck}] live: {len(records)} records (last {days}d)")
+            except Exception as e:
+                print(f"[{ck}] FETCH FAILED: {e}", file=sys.stderr)
+                continue
+        n = upsert(conn, (normalize(ck, ccfg, r) for r in records))
+        print(f"[{ck}] {n} new permits stored")
+        total += n
+    print(f"Done. {total} new permits.")
+
+if __name__ == "__main__":
+    main()
