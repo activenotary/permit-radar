@@ -16,8 +16,14 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install requests
       - run: python3 ingest.py
+        env:
+          SODA_APP_TOKEN: ${{ secrets.SODA_APP_TOKEN }}
       - run: python3 enrich.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       - run: python3 digest.py
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       - run: python3 pseo.py
       - name: Commit results
         run: |
