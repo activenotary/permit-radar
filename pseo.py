@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""Permit Radar — pSEO static site generator.
-Generates one page per city x trade with live permit data + stats, plus city
-and root index pages. Output: docs/ — deploy to Vercel/Netlify/GitHub Pages.
-"""
+"""Permit Radar — pSEO static site generator (relative-link version)."""
 import html, json, sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -26,14 +23,13 @@ th{font-size:12px;text-transform:uppercase;color:#6b7280}.pill{background:#eff6f
 .stat b{display:block;font-size:22px}footer{margin-top:40px;color:#9ca3af;font-size:12px;border-top:1px solid #e5e7eb;padding-top:14px}
 nav{font-size:13px;color:#6b7280;margin-bottom:18px}"""
 
-def page(title, desc, body, canonical):
+def page(title, desc, body, home):
     return f"""<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
-<link rel="canonical" href="{canonical}">
 <style>{CSS}</style></head><body>
-<nav><a href="/">Permit Radar</a></nav>
+<nav><a href="{home}">Permit Radar</a></nav>
 {body}
 <footer>Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
 Verify permit details with the issuing authority before acting. © Permit Radar</footer>
@@ -53,7 +49,6 @@ def main():
     permits = [dict(r) for r in conn.execute(
         "SELECT * FROM permits WHERE enriched=1 ORDER BY issued_date DESC, lead_score DESC")]
     month = datetime.now().strftime("%B %Y")
-    base = "https://yourdomain.com"  # set your production domain
     city_links = []
 
     for ck, ccfg in CFG["cities"].items():
@@ -62,7 +57,6 @@ def main():
         label = ccfg["label"]
         trade_links = []
 
-        # trade pages
         by_trade = {}
         for p in cps:
             for t in json.loads(p["trades"] or "[]"):
@@ -80,14 +74,13 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
 <span class="stat"><b>{fmt(total)}</b>total reported value</span>
 <span class="stat"><b>{fmt(biggest['value'])}</b>largest project</span></div>
 {permit_table(plist)}
-<p><strong>Want tomorrow's list at 7am?</strong> <a href="/#subscribe">Get {tl} permit alerts for {label} →</a></p>"""
+<p><strong>Want tomorrow's list at 7am?</strong> <a href="../../">Get {tl} permit alerts for {label} →</a></p>"""
             (d / "index.html").write_text(page(
                 f"New {tl} Permits in {label} ({month}) | Permit Radar",
                 f"{len(plist)} new {tl.lower()} building permits in {label}, updated nightly with project values and addresses.",
-                body, f"{base}/{ck}/{t}/"), encoding="utf-8")
-            trade_links.append(f'<li><a href="/{ck}/{t}/">{tl} — {len(plist)} new permits</a></li>')
+                body, "../../"), encoding="utf-8")
+            trade_links.append(f'<li><a href="{t}/">{tl} — {len(plist)} new permits</a></li>')
 
-        # city index
         (SITE / ck).mkdir(parents=True, exist_ok=True)
         cbody = f"""<h1>New Commercial Building Permits in {label} — {month}</h1>
 <p>{len(cps)} recent permits, {fmt(sum(p['value'] or 0 for p in cps))} in reported value. Browse by trade:</p>
@@ -95,11 +88,10 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
         (SITE / ck / "index.html").write_text(page(
             f"New Commercial Building Permits in {label} ({month}) | Permit Radar",
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
-            cbody, f"{base}/{ck}/"), encoding="utf-8")
-        city_links.append(f'<li><a href="/{ck}/">{label} — {len(cps)} recent permits</a></li>')
+            cbody, "../"), encoding="utf-8")
+        city_links.append(f'<li><a href="{ck}/">{label} — {len(cps)} recent permits</a></li>')
         print(f"[{ck}] {len(by_trade)} trade pages + city index")
 
-    # root index
     SITE.mkdir(exist_ok=True)
     (SITE / "index.html").write_text(page(
         "Permit Radar — Your Next Job, Every Morning at 7am",
@@ -109,7 +101,7 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
 in your metro, tag it by trade, and send you the ones worth calling about — the week they're filed.</p>
 <h2 id="subscribe">Coverage</h2><ul>{''.join(city_links)}</ul>
 <p>Alerts: $49–149/month per metro+trade. <em>(Stripe checkout link goes here.)</em></p>""",
-        base + "/"), encoding="utf-8")
+        "./"), encoding="utf-8")
     print("Root index written. Total pages:", sum(1 for _ in SITE.rglob("index.html")))
 
 if __name__ == "__main__":
