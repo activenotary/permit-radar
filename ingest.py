@@ -101,12 +101,14 @@ def fetch_live_riverside(city_key, ccfg, days):
 
     def get(params):
         r = requests.get(ccfg["endpoint"], params=params, timeout=60)
+        if r.status_code >= 500:
+            return None  # portal 500s on offsets past the end of the dataset
         r.raise_for_status()
         return r.json()
 
     def probe(offset):
         rows = get({"max": 1, "offset": offset, "sort": "Permit Number", "order": "asc"})
-        if not rows:
+        if not rows:  # empty page or 500 → treat as past the end
             return None
         v = rows[0].get("Permit Number")
         return v if isinstance(v, str) else ""
@@ -126,7 +128,7 @@ def fetch_live_riverside(city_key, ccfg, days):
         off = lo
         for _ in range(120):  # safety cap: 12k records per prefix
             rows = get({"max": 100, "offset": off, "sort": "Permit Number", "order": "asc"})
-            if not rows:
+            if not rows:  # empty page or 500 → end of data
                 break
             stop = False
             for rec in rows:
