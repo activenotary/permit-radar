@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Demo HVAC Chicago",
+    "email": "demo@example.com",
+    "city": "chicago",
+    "trades": [
+      "hvac",
+      "plumbing"
+    ],
+    "min_value": 50000
+  },
+  {
+    "name": "Demo GC Chicago",
+    "email": "demo2@example.com",
+    "city": "chicago",
+    "trades": [
+      "general_renovation",
+      "demolition",
+      "concrete_masonry"
+    ],
+    "min_value": 100000
+  },
+  {
+    "name": "Demo GC Austin",
+    "email": "demo3@example.com",
+    "city": "austin",
+    "trades": [
+      "general_renovation",
+      "electrical",
+      "hvac",
+      "plumbing"
+    ],
+    "min_value": 0
+  }
+]

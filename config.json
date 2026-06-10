@@ -1,0 +1,45 @@
+{
+  "db_path": "permits.db",
+  "lookback_days": 7,
+  "enrich": {
+    "model": "claude-haiku-4-5",
+    "batch_size": 20,
+    "max_permits_per_run": 400
+  },
+  "cities": {
+    "chicago": {
+      "label": "Chicago, IL",
+      "domain": "data.cityofchicago.org",
+      "dataset": "ydr8-5enu",
+      "issued_field": "issue_date",
+      "extra_where": "reported_cost > '25000'",
+      "fields": {
+        "permit_id": "permit_",
+        "permit_type": "permit_type",
+        "description": "work_description",
+        "value": "reported_cost",
+        "contractor": "contact_1_name",
+        "lat": "latitude",
+        "lon": "longitude"
+      },
+      "address_fields": ["street_number", "street_direction", "street_name"]
+    },
+    "austin": {
+      "label": "Austin, TX",
+      "dataset": "3syk-w9eu",
+      "domain": "data.austintexas.gov",
+      "issued_field": "issue_date",
+      "extra_where": "permit_class_mapped = 'Commercial'",
+      "fields": {
+        "permit_id": "permit_number",
+        "permit_type": "permit_type_desc",
+        "description": "description",
+        "value": "total_job_valuation",
+        "contractor": "contractor_company_name",
+        "lat": "latitude",
+        "lon": "longitude"
+      },
+      "address_fields": ["original_address1", "original_city"]
+    }
+  }
+}
