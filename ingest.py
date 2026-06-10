@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Permit Radar — ingestion. Pulls recent permits from city open-data APIs
-(Socrata SODA), normalizes them to a common schema, upserts into SQLite.
+(Socrata SODA + ArcGIS REST), normalizes to a common schema, upserts into SQLite.
 
 Usage:
   python3 ingest.py                              # live pull, all cities
@@ -44,6 +44,14 @@ def to_float(v):
     except (TypeError, ValueError):
         return None
 
+def to_date(v):
+    if isinstance(v, (int, float)):  # ArcGIS returns epoch milliseconds
+        try:
+            return datetime.fromtimestamp(v / 1000, tz=timezone.utc).strftime("%Y-%m-%d")
+        except (ValueError, OSError, OverflowError):
+            return ""
+    return (str(v) if v else "")[:10]
+
 def normalize(city_key, ccfg, rec):
     f = ccfg["fields"]
     pid = str(rec.get(f["permit_id"], "")).strip()
@@ -56,7 +64,7 @@ def normalize(city_key, ccfg, rec):
         "permit_id": pid,
         "permit_type": rec.get(f.get("permit_type"), ""),
         "description": (rec.get(f.get("description")) or "")[:2000],
-        "issued_date": (rec.get(ccfg["issued_field"]) or "")[:10],
+        "issued_date": to_date(rec.get(ccfg["issued_field"])),
         "value": to_float(rec.get(f.get("value"))),
         "address": address,
         "contractor": rec.get(f.get("contractor")) or "",
@@ -66,7 +74,27 @@ def normalize(city_key, ccfg, rec):
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
 
+def fetch_live_arcgis(city_key, ccfg, days):
+    """ArcGIS REST feature-service feeds (Las Vegas, Tucson, ...)."""
+    if requests is None:
+        sys.exit("pip install requests")
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    where = f"{ccfg['issued_field']} >= DATE '{since}'"
+    if ccfg.get("extra_where"):
+        where += f" AND {ccfg['extra_where']}"
+    params = {"where": where, "outFields": "*", "returnGeometry": "false",
+              "orderByFields": f"{ccfg['issued_field']} DESC",
+              "resultRecordCount": 1000, "f": "json"}
+    r = requests.get(ccfg["endpoint"], params=params, timeout=60)
+    r.raise_for_status()
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"ArcGIS error: {str(data['error'])[:300]}")
+    return [f["attributes"] for f in data.get("features", [])]
+
 def fetch_live(city_key, ccfg, days):
+    if ccfg.get("api") == "arcgis":
+        return fetch_live_arcgis(city_key, ccfg, days)
     if requests is None:
         sys.exit("pip install requests")
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00.000")
