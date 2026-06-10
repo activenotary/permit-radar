@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 CFG = json.loads((ROOT / "config.json").read_text())
 SITE = ROOT / "docs"
+BASE = "https://justpermitted.com"
 
 STRIPE_49 = "https://buy.stripe.com/28E4gy3XF9h80Ded8IfMA00"   # 1 Metro, 1 Trade
 STRIPE_99 = "https://buy.stripe.com/cNi6oGbq71OGadO5GgfMA01"   # 1 Metro, All Trades
@@ -107,6 +108,7 @@ def main():
             p["value"] = None
     month = datetime.now().strftime("%B %Y")
     city_cards = []
+    sitemap_urls = [""]
 
     for ck, ccfg in CFG["cities"].items():
         cps = [p for p in permits if p["city"] == ck]
@@ -138,6 +140,7 @@ are being awarded right now.</p>
                 f"{len(plist)} new {tl.lower()} building permits in {label}, updated nightly with project values and addresses.",
                 body, "../../"), encoding="utf-8")
             trade_links.append(f'<a class="card" href="{t}/"><b>{tl}</b><span>{len(plist)} new permits · {fmt(total)}</span></a>')
+            sitemap_urls.append(f"{ck}/{t}/")
 
         (SITE / ck).mkdir(parents=True, exist_ok=True)
         cbody = f"""<h1>New Commercial Building Permits in {label} — {month}</h1>
@@ -150,6 +153,7 @@ are being awarded right now.</p>
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
             cbody, "../"), encoding="utf-8")
         city_cards.append(f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>')
+        sitemap_urls.append(f"{ck}/")
         print(f"[{ck}] {len(by_trade)} trade pages + city index")
 
     SITE.mkdir(exist_ok=True)
@@ -166,7 +170,15 @@ worth calling about — the week they're filed, before your competitors hear abo
 <div class="cards">{''.join(city_cards)}</div>
 {PLANS_HTML}""",
         "./"), encoding="utf-8")
-    print("Root index written. Total pages:", sum(1 for _ in SITE.rglob("index.html")))
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    sm = ['<?xml version="1.0" encoding="UTF-8"?>',
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    sm += [f"<url><loc>{BASE}/{u}</loc><lastmod>{today}</lastmod></url>" for u in sitemap_urls]
+    sm.append("</urlset>")
+    (SITE / "sitemap.xml").write_text("\n".join(sm), encoding="utf-8")
+    (SITE / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {BASE}/sitemap.xml\n", encoding="utf-8")
+    print("Root index + sitemap written. Total pages:", sum(1 for _ in SITE.rglob("index.html")))
 
 if __name__ == "__main__":
     main()
