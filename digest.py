@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Permit Radar — subscriber digests. Builds an HTML email digest per profile
 in profiles.json (city + trades + min project value). Output: out/digests/.
-
-Email sending: wire the commented Resend block once you have an API key.
+Sends via Resend when RESEND_API_KEY is set.
 """
 import html, json, sqlite3
 from datetime import datetime
@@ -44,15 +43,37 @@ def build(prof, permits):
         rows = '<tr><td colspan="3" style="padding:20px;color:#6b7280;">No new matching permits in this period.</td></tr>'
     return f"""<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;margin:0;padding:24px;">
   <div style="max-width:720px;margin:auto;background:#fff;border-radius:8px;padding:24px;border:1px solid #e5e7eb;">
-    <h1 style="margin:0 0 4px;font-size:20px;">Permit Radar — {html.escape(label)}</h1>
+    <h1 style="margin:0 0 4px;font-size:20px;">JustPermitted — {html.escape(label)}</h1>
     <p style="color:#6b7280;margin:0 0 16px;">{datetime.now().strftime('%B %d, %Y')} · {len(permits)} new matching permits for {html.escape(prof['name'])}</p>
     <table style="border-collapse:collapse;width:100%;">
       <tr style="text-align:left;color:#6b7280;font-size:12px;text-transform:uppercase;">
         <th style="padding:10px;">Score</th><th style="padding:10px;">Project</th><th style="padding:10px;">Value</th></tr>
       {rows}
     </table>
-    <p style="color:#9ca3af;font-size:11px;margin-top:16px;">Source: public municipal permit records. Verify details before bidding.</p>
+    <p style="color:#9ca3af;font-size:11px;margin-top:16px;">Source: public municipal permit records. Verify details before bidding.
+    JustPermitted · justpermitted.com</p>
   </div></body></html>"""
+
+def send_email(prof, html_body, n_hits):
+    """Send the digest via Resend. Skips demo profiles and runs without a key."""
+    import os
+    key = os.environ.get("RESEND_API_KEY")
+    if not key or prof["email"].endswith("@example.com"):
+        return False
+    import requests
+    label = CFG["cities"][prof["city"]]["label"]
+    r = requests.post(
+        "https://api.resend.com/emails",
+        headers={"Authorization": f"Bearer {key}"},
+        json={"from": "JustPermitted <alerts@justpermitted.com>",
+              "to": prof["email"],
+              "subject": f"{n_hits} new {label} permits in your trades — JustPermitted",
+              "html": html_body},
+        timeout=30)
+    if r.status_code >= 300:
+        print(f"[{prof['name']}] SEND FAILED: {r.status_code} {r.text[:200]}")
+        return False
+    return True
 
 def main():
     conn = sqlite3.connect(ROOT / CFG["db_path"]); conn.row_factory = sqlite3.Row
@@ -60,16 +81,11 @@ def main():
         "SELECT * FROM permits WHERE enriched=1 ORDER BY lead_score DESC, issued_date DESC")]
     for prof in PROFILES:
         hits = [p for p in permits if matches(p, prof)]
+        body = build(prof, hits)
         path = OUT / f"{prof['name'].lower().replace(' ', '_')}.html"
-        path.write_text(build(prof, hits), encoding="utf-8")
-        print(f"[{prof['name']}] {len(hits)} matches -> {path.name}")
-        # --- Resend email send (enable when ready) ---
-        # import requests, os
-        # requests.post("https://api.resend.com/emails",
-        #   headers={"Authorization": f"Bearer {os.environ['RESEND_API_KEY']}"},
-        #   json={"from": "alerts@yourdomain.com", "to": prof["email"],
-        #         "subject": f"{len(hits)} new permits in your trade — Permit Radar",
-        #         "html": build(prof, hits)})
+        path.write_text(body, encoding="utf-8")
+        sent = send_email(prof, body, len(hits))
+        print(f"[{prof['name']}] {len(hits)} matches -> {path.name}{' · EMAILED' if sent else ''}")
 
 if __name__ == "__main__":
     main()
