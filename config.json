@@ -57,6 +57,36 @@
         "lon": "lon"
       },
       "address_fields": ["primary_address", "zip_code"]
+    },
+    "lasvegas": {
+      "label": "Las Vegas, NV",
+      "api": "arcgis",
+      "endpoint": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/OpenData_Building_Permits_/FeatureServer/0/query",
+      "issued_field": "ISSDTTM",
+      "extra_where": "COMM = 'Y'",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "APNO",
+        "permit_type": "WORKTYPE",
+        "description": "WORKTYPE",
+        "value": "DECLVLTN",
+        "contractor": "APPLICANT"
+      },
+      "address_fields": ["STNO", "PREDIR", "STNAME", "SUFFIX", "CITY", "ZIP"]
+    },
+    "tucson": {
+      "label": "Tucson, AZ",
+      "api": "arcgis",
+      "endpoint": "https://gis.tucsonaz.gov/public/rest/services/PublicMaps/PermitsCode/MapServer/81/query",
+      "issued_field": "ISSUEDATE",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "NUMBER",
+        "permit_type": "WORKCLASS",
+        "description": "DESCRIPTION",
+        "value": "VALUE"
+      },
+      "address_fields": ["ADDRESS", "CITY", "POSTALCODE"]
     }
   }
 }
