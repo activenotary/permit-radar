@@ -45,6 +45,7 @@
       "label": "Los Angeles, CA",
       "domain": "data.lacity.org",
       "dataset": "pi9x-tg5x",
+      "lookback_days": 30,
       "issued_field": "issue_date",
       "extra_where": "permit_sub_type = 'Commercial'",
       "fields": {
