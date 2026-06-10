@@ -86,4 +86,87 @@ PLANS_HTML = f"""<h2 id="subscribe">Get tomorrow's permits in your inbox at 7am<
     <h3>Single Trade</h3>
     <div class="price">$49<span class="per">/month</span></div>
     <ul><li>Daily email digest for your metro</li><li>Your trade only (e.g. roofing)</li><li>Project values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
-    <a class="buy" href="{STRIPE_49}">Subscribe — $49/m
+    <a class="buy" href="{STRIPE_49}">Subscribe — $49/mo</a>
+  </div>
+  <div class="plan popular">
+    <span class="badge">MOST POPULAR</span>
+    <h3>All Trades</h3>
+    <div class="price">$99<span class="per">/month</span></div>
+    <ul><li>Daily email digest for your metro</li><li>Every trade category included</li><li>Project values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
+    <a class="buy" href="{STRIPE_99}">Subscribe — $99/mo</a>
+  </div>
+</div>
+<p style="color:#64748b;font-size:13.5px">After subscribing, reply to your receipt email with your metro and trade — your daily digest starts the next morning.</p>"""
+
+def main():
+    conn = sqlite3.connect(ROOT / CFG["db_path"]); conn.row_factory = sqlite3.Row
+    permits = [dict(r) for r in conn.execute(
+        "SELECT * FROM permits WHERE enriched=1 ORDER BY issued_date DESC, lead_score DESC")]
+    for p in permits:  # drop junk valuations from city data feeds (e.g. $63B typos)
+        if p["value"] and p["value"] > 500_000_000:
+            p["value"] = None
+    month = datetime.now().strftime("%B %Y")
+    city_cards = []
+
+    for ck, ccfg in CFG["cities"].items():
+        cps = [p for p in permits if p["city"] == ck]
+        if not cps: continue
+        label = ccfg["label"]
+        trade_links = []
+        city_total = sum(p["value"] or 0 for p in cps)
+
+        by_trade = {}
+        for p in cps:
+            for t in json.loads(p["trades"] or "[]"):
+                by_trade.setdefault(t, []).append(p)
+        for t, plist in sorted(by_trade.items()):
+            tl = TRADE_LABELS.get(t, t.title())
+            d = SITE / ck / t; d.mkdir(parents=True, exist_ok=True)
+            total = sum(p["value"] or 0 for p in plist)
+            biggest = max(plist, key=lambda p: p["value"] or 0)
+            body = f"""<h1>New {tl} Permits in {label} — {month}</h1>
+<p>{len(plist)} commercial building permits relevant to {tl.lower()} contractors were issued recently in {label},
+representing {fmt(total)} in reported project value. Every project below was just permitted — meaning trade packages
+are being awarded right now.</p>
+<div><span class="stat"><b>{len(plist)}</b>new permits</span>
+<span class="stat"><b>{fmt(total)}</b>total reported value</span>
+<span class="stat"><b>{fmt(biggest['value'])}</b>largest project</span></div>
+{permit_table(plist)}
+<p><strong>Want tomorrow's list at 7am?</strong><br><a class="buy" href="{STRIPE_49}">Get {tl} alerts for {label} — $49/mo</a></p>"""
+            (d / "index.html").write_text(page(
+                f"New {tl} Permits in {label} ({month}) | JustPermitted",
+                f"{len(plist)} new {tl.lower()} building permits in {label}, updated nightly with project values and addresses.",
+                body, "../../"), encoding="utf-8")
+            trade_links.append(f'<a class="card" href="{t}/"><b>{tl}</b><span>{len(plist)} new permits · {fmt(total)}</span></a>')
+
+        (SITE / ck).mkdir(parents=True, exist_ok=True)
+        cbody = f"""<h1>New Commercial Building Permits in {label} — {month}</h1>
+<p>{len(cps)} recent permits worth {fmt(city_total)} in reported value, updated nightly. Browse by trade:</p>
+<div class="cards">{''.join(trade_links)}</div>
+<h2>Latest permits</h2>{permit_table(cps, 30)}
+{PLANS_HTML}"""
+        (SITE / ck / "index.html").write_text(page(
+            f"New Commercial Building Permits in {label} ({month}) | JustPermitted",
+            f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
+            cbody, "../"), encoding="utf-8")
+        city_cards.append(f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>')
+        print(f"[{ck}] {len(by_trade)} trade pages + city index")
+
+    SITE.mkdir(exist_ok=True)
+    (SITE / "index.html").write_text(page(
+        "JustPermitted — Your Next Job, Every Morning at 7am",
+        "Daily commercial building permit alerts for contractors and suppliers. Know who pulled permits before your competitors do.",
+        f"""<div class="hero">
+<h1>Your next job,<br>every morning at 7am.</h1>
+<p>We track every commercial building permit in your metro, tag it by trade, and send you the ones
+worth calling about — the week they're filed, before your competitors hear about them.</p>
+<a class="buy" href="#subscribe">See plans →</a>
+</div>
+<h2>Live coverage</h2>
+<div class="cards">{''.join(city_cards)}</div>
+{PLANS_HTML}""",
+        "./"), encoding="utf-8")
+    print("Root index written. Total pages:", sum(1 for _ in SITE.rglob("index.html")))
+
+if __name__ == "__main__":
+    main()
