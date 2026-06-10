@@ -40,6 +40,22 @@
         "lon": "longitude"
       },
       "address_fields": ["original_address1", "original_city"]
+    },
+    "losangeles": {
+      "label": "Los Angeles, CA",
+      "domain": "data.lacity.org",
+      "dataset": "pi9x-tg5x",
+      "issued_field": "issue_date",
+      "extra_where": "permit_sub_type = 'Commercial'",
+      "fields": {
+        "permit_id": "permit_nbr",
+        "permit_type": "permit_type",
+        "description": "work_desc",
+        "value": "valuation",
+        "lat": "lat",
+        "lon": "lon"
+      },
+      "address_fields": ["primary_address", "zip_code"]
     }
   }
 }
