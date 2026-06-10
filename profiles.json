@@ -31,5 +31,16 @@
       "plumbing"
     ],
     "min_value": 0
+  },
+  {
+    "name": "Chris Test Riverside",
+    "email": "cquinn2482@gmail.com",
+    "city": "riverside",
+    "trades": [
+      "roofing", "hvac", "electrical", "plumbing", "demolition",
+      "general_renovation", "concrete_masonry", "signage", "fire_protection",
+      "windows_doors", "elevator", "fencing", "other"
+    ],
+    "min_value": 0
   }
 ]
