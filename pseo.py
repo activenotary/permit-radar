@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Permit Radar — pSEO static site generator (relative-link version)."""
+"""JustPermitted — pSEO static site generator."""
 import html, json, sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -29,10 +29,10 @@ def page(title, desc, body, home):
 <title>{html.escape(title)}</title>
 <meta name="description" content="{html.escape(desc)}">
 <style>{CSS}</style></head><body>
-<nav><a href="{home}">Permit Radar</a></nav>
+<nav><a href="{home}">JustPermitted</a></nav>
 {body}
 <footer>Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
-Verify permit details with the issuing authority before acting. © Permit Radar</footer>
+Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com</footer>
 </body></html>"""
 
 def fmt(v): return f"${v:,.0f}" if v else "—"
@@ -76,7 +76,7 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
 {permit_table(plist)}
 <p><strong>Want tomorrow's list at 7am?</strong> <a href="../../">Get {tl} permit alerts for {label} →</a></p>"""
             (d / "index.html").write_text(page(
-                f"New {tl} Permits in {label} ({month}) | Permit Radar",
+                f"New {tl} Permits in {label} ({month}) | JustPermitted",
                 f"{len(plist)} new {tl.lower()} building permits in {label}, updated nightly with project values and addresses.",
                 body, "../../"), encoding="utf-8")
             trade_links.append(f'<li><a href="{t}/">{tl} — {len(plist)} new permits</a></li>')
@@ -86,7 +86,7 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
 <p>{len(cps)} recent permits, {fmt(sum(p['value'] or 0 for p in cps))} in reported value. Browse by trade:</p>
 <ul>{''.join(trade_links)}</ul>{permit_table(cps, 30)}"""
         (SITE / ck / "index.html").write_text(page(
-            f"New Commercial Building Permits in {label} ({month}) | Permit Radar",
+            f"New Commercial Building Permits in {label} ({month}) | JustPermitted",
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
             cbody, "../"), encoding="utf-8")
         city_links.append(f'<li><a href="{ck}/">{label} — {len(cps)} recent permits</a></li>')
@@ -94,9 +94,9 @@ representing {fmt(total)} in reported project value. The largest: {html.escape((
 
     SITE.mkdir(exist_ok=True)
     (SITE / "index.html").write_text(page(
-        "Permit Radar — Your Next Job, Every Morning at 7am",
+        "JustPermitted — Your Next Job, Every Morning at 7am",
         "Daily commercial building permit alerts for contractors and suppliers. Know who pulled permits before your competitors do.",
-        f"""<h1>Permit Radar</h1>
+        f"""<h1>JustPermitted</h1>
 <p><strong>Your next job, every morning at 7am.</strong> We track every commercial building permit
 in your metro, tag it by trade, and send you the ones worth calling about — the week they're filed.</p>
 <h2 id="subscribe">Coverage</h2><ul>{''.join(city_links)}</ul>
