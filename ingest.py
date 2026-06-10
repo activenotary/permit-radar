@@ -95,51 +95,58 @@ def fetch_live_arcgis(city_key, ccfg, days):
 
 def fetch_live_riverside(city_key, ccfg, days):
     """City of Riverside Engage portal: paged JSON, no server-side filters.
-    Binary-search the current-year permit-number block, then page through it."""
+    The portal 500s on large offsets, so we work in DESCENDING permit-number
+    order where the newest blocks sit at small, servable offsets."""
     if requests is None:
         sys.exit("pip install requests")
 
     def get(params):
         r = requests.get(ccfg["endpoint"], params=params, timeout=60)
         if r.status_code >= 500:
-            return None  # portal 500s on offsets past the end of the dataset
+            return None  # portal 500s on offsets past what it can serve
         r.raise_for_status()
         return r.json()
 
     def probe(offset):
-        rows = get({"max": 1, "offset": offset, "sort": "Permit Number", "order": "asc"})
-        if not rows:  # empty page or 500 → treat as past the end
+        rows = get({"max": 1, "offset": offset, "sort": "Permit Number", "order": "desc"})
+        if not rows:
             return None
         v = rows[0].get("Permit Number")
         return v if isinstance(v, str) else ""
 
     year = datetime.now(timezone.utc).year
+    prefix = (ccfg.get("prefixes") or ["BP"])[0]
+    block_top = f"{prefix}-9999"        # anything above this is a later prefix (EP/MP/PP...)
+    this_year = f"{prefix}-{year}-"
+
+    # binary search (desc): first offset inside the BP block
+    lo, hi = 0, 25000
+    while lo < hi:
+        mid = (lo + hi) // 2
+        pn = probe(mid)
+        if pn is None or pn > block_top:
+            lo = mid + 1
+        else:
+            hi = mid
+
     out = []
-    for prefix in ccfg.get("prefixes", ["BP"]):
-        target = f"{prefix}-{year}-"
-        lo, hi = 0, 120000
-        while lo < hi:
-            mid = (lo + hi) // 2
-            pn = probe(mid)
-            if pn is not None and pn < target:
-                lo = mid + 1
-            else:
-                hi = mid
-        off = lo
-        for _ in range(120):  # safety cap: 12k records per prefix
-            rows = get({"max": 100, "offset": off, "sort": "Permit Number", "order": "asc"})
-            if not rows:  # empty page or 500 → end of data
+    off = lo
+    extra = 0
+    for _ in range(220):  # safety cap ~22k records
+        rows = get({"max": 100, "offset": off, "sort": "Permit Number", "order": "desc"})
+        if not rows:
+            break
+        for rec in rows:
+            pn = rec.get("Permit Number")
+            if not isinstance(pn, str) or pn > block_top:
+                continue  # still in a later prefix block (overshoot)
+            out.append(rec)
+        last = rows[-1].get("Permit Number")
+        if isinstance(last, str) and last < this_year:
+            extra += 1   # into last year's numbers — sweep a tail, then stop
+            if extra >= 40:
                 break
-            stop = False
-            for rec in rows:
-                pn = rec.get("Permit Number")
-                if not isinstance(pn, str) or not pn.startswith(target):
-                    stop = True
-                    break
-                out.append(rec)
-            if stop:
-                break
-            off += 100
+        off += 100
 
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
     keep = []
