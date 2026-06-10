@@ -74,6 +74,22 @@
       },
       "address_fields": ["STNO", "PREDIR", "STNAME", "SUFFIX", "CITY", "ZIP"]
     },
+    "riverside": {
+      "label": "Riverside, CA",
+      "api": "riverside",
+      "endpoint": "https://riversideca.gov/transparency/data/dataset/json/34",
+      "issued_field": "Issue Date",
+      "lookback_days": 14,
+      "prefixes": ["BP"],
+      "fields": {
+        "permit_id": "Permit Number",
+        "permit_type": "Permit Sub-Type",
+        "description": "Description",
+        "value": "Valuation",
+        "contractor": "Contractor Name"
+      },
+      "address_fields": ["Site Address"]
+    },
     "tucson": {
       "label": "Tucson, AZ",
       "api": "arcgis",
