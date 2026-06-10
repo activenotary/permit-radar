@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Permit Radar — ingestion. Pulls recent permits from city open-data APIs
-(Socrata SODA + ArcGIS REST), normalizes to a common schema, upserts into SQLite.
+(Socrata SODA + ArcGIS REST + custom city portals), normalizes to a common
+schema, upserts into SQLite.
 
 Usage:
   python3 ingest.py                              # live pull, all cities
@@ -92,9 +93,68 @@ def fetch_live_arcgis(city_key, ccfg, days):
         raise RuntimeError(f"ArcGIS error: {str(data['error'])[:300]}")
     return [f["attributes"] for f in data.get("features", [])]
 
+def fetch_live_riverside(city_key, ccfg, days):
+    """City of Riverside Engage portal: paged JSON, no server-side filters.
+    Binary-search the current-year permit-number block, then page through it."""
+    if requests is None:
+        sys.exit("pip install requests")
+
+    def get(params):
+        r = requests.get(ccfg["endpoint"], params=params, timeout=60)
+        r.raise_for_status()
+        return r.json()
+
+    def probe(offset):
+        rows = get({"max": 1, "offset": offset, "sort": "Permit Number", "order": "asc"})
+        if not rows:
+            return None
+        v = rows[0].get("Permit Number")
+        return v if isinstance(v, str) else ""
+
+    year = datetime.now(timezone.utc).year
+    out = []
+    for prefix in ccfg.get("prefixes", ["BP"]):
+        target = f"{prefix}-{year}-"
+        lo, hi = 0, 120000
+        while lo < hi:
+            mid = (lo + hi) // 2
+            pn = probe(mid)
+            if pn is not None and pn < target:
+                lo = mid + 1
+            else:
+                hi = mid
+        off = lo
+        for _ in range(120):  # safety cap: 12k records per prefix
+            rows = get({"max": 100, "offset": off, "sort": "Permit Number", "order": "asc"})
+            if not rows:
+                break
+            stop = False
+            for rec in rows:
+                pn = rec.get("Permit Number")
+                if not isinstance(pn, str) or not pn.startswith(target):
+                    stop = True
+                    break
+                out.append(rec)
+            if stop:
+                break
+            off += 100
+
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    keep = []
+    for rec in out:
+        if rec.get("Permit Type") != "Commercial":
+            continue
+        d = str(rec.get("Issue Date") or "")
+        if len(d) != 10 or d < since:
+            continue
+        keep.append(rec)
+    return keep
+
 def fetch_live(city_key, ccfg, days):
     if ccfg.get("api") == "arcgis":
         return fetch_live_arcgis(city_key, ccfg, days)
+    if ccfg.get("api") == "riverside":
+        return fetch_live_riverside(city_key, ccfg, days)
     if requests is None:
         sys.exit("pip install requests")
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00.000")
