@@ -70,6 +70,7 @@ def page(title, desc, body, home):
 </div></main>
 <footer><div class="wrap">Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
 Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com</div></footer>
+<script data-goatcounter="https://justpermitted.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body></html>"""
 
 def fmt(v): return f"${v:,.0f}" if v else "—"
