@@ -103,6 +103,92 @@
         "value": "VALUE"
       },
       "address_fields": ["ADDRESS", "CITY", "POSTALCODE"]
+    },
+    "miami": {
+      "label": "Miami-Dade, FL",
+      "api": "arcgis",
+      "endpoint": "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/miamidade_permit_data/FeatureServer/0/query",
+      "issued_field": "PermitIssuedDate",
+      "extra_where": "ResidentialCommercial='C'",
+      "fields": {
+        "permit_id": "PermitNumber",
+        "permit_type": "PermitType",
+        "description": "DetailDescriptionComments",
+        "value": "EstimatedValue",
+        "contractor": "ContractorName"
+      },
+      "address_fields": ["PropertyAddress"]
+    },
+    "neworleans": {
+      "label": "New Orleans, LA",
+      "domain": "data.nola.gov",
+      "dataset": "72f9-bi28",
+      "issued_field": "issuedate",
+      "extra_where": "permitclassmapped='Non-Residential'",
+      "fields": {
+        "permit_id": "permitnum",
+        "permit_type": "permittypedesc",
+        "description": "description",
+        "value": "estprojectcost",
+        "contractor": "contractorcompanyname"
+      },
+      "address_fields": ["originaladdress1", "originalcity"]
+    },
+    "nashville": {
+      "label": "Nashville, TN",
+      "api": "arcgis",
+      "endpoint": "https://services2.arcgis.com/HdTo6HJqh92wn4D8/arcgis/rest/services/Building_Permits_Issued_2/FeatureServer/0/query",
+      "issued_field": "Date_Issued",
+      "extra_where": "Permit_Type_Description LIKE '%Comm%'",
+      "fields": {
+        "permit_id": "Permit__",
+        "permit_type": "Permit_Type_Description",
+        "description": "Purpose",
+        "value": "Const_Cost",
+        "contractor": "Contact"
+      },
+      "address_fields": ["Address", "City", "ZIP"]
+    },
+    "sanfrancisco": {
+      "label": "San Francisco, CA",
+      "domain": "data.sfgov.org",
+      "dataset": "i98e-djp9",
+      "issued_field": "issued_date",
+      "extra_where": "proposed_use not like '%family%' AND proposed_use != 'apartments'",
+      "fields": {
+        "permit_id": "permit_number",
+        "permit_type": "permit_type_definition",
+        "description": "description",
+        "value": "estimated_cost"
+      },
+      "address_fields": ["street_number", "street_name", "street_suffix"]
+    },
+    "denver": {
+      "label": "Denver, CO",
+      "api": "arcgis",
+      "endpoint": "https://services1.arcgis.com/zdB7qR0BtYrg0Xpl/arcgis/rest/services/ODC_DEV_COMMERCIALCONSTPERMIT_P/FeatureServer/317/query",
+      "issued_field": "DATE_ISSUED",
+      "fields": {
+        "permit_id": "PERMIT_NUM",
+        "permit_type": "CLASS",
+        "description": "CLASS",
+        "value": "VALUATION",
+        "contractor": "CONTRACTOR_NAME"
+      },
+      "address_fields": ["ADDRESS"]
+    },
+    "henderson": {
+      "label": "Henderson, NV",
+      "api": "arcgis",
+      "endpoint": "https://maps.cityofhenderson.com/arcgis/rest/services/public/OpenDevPermits/MapServer/2/query",
+      "issued_field": "ISSUEDATE",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "CASENUMBER",
+        "permit_type": "CASETYPE",
+        "description": "DESCRIPTION"
+      },
+      "address_fields": ["MAIN_ADDRESS_LINE1", "MAIN_ADDRESS_LINE2"]
     }
   }
 }
