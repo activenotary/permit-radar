@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """JustPermitted — pSEO static site generator (v2 design, Stripe checkout)."""
-import html, json, sqlite3
+import html, json, re, sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -74,6 +74,19 @@ Verify permit details with the issuing authority before acting. © JustPermitted
 
 def fmt(v): return f"${v:,.0f}" if v else "—"
 
+JUNK_CONTRACTORS = {"OWNER", "SELF", "NONE", "N/A", "NA", "UNKNOWN", "HOMEOWNER",
+                    "OWNER/BUILDER", "OWNER BUILDER", "PROPERTY OWNER", "TBD", "VARIOUS"}
+
+def slugify(name):
+    s = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:60].strip("-")
+    return s or None
+
+def display_name(name):
+    d = name.strip().title()
+    d = re.sub(r"\b(Llc|Inc|Co|Corp|Ltd|Lp|Pc|Dba|Hvac|Usa|Ac|Jb|Rj|Tj)\b",
+               lambda m: m.group(0).upper(), d)
+    return re.sub(r"'S\b", "'s", d)
+
 def permit_table(permits, limit=50):
     rows = "".join(f"""<tr><td style="white-space:nowrap">{p['issued_date']}</td>
 <td>{html.escape((p['summary'] or p['permit_type'] or '')[:140])}<br>
@@ -142,10 +155,49 @@ are being awarded right now.</p>
             trade_links.append(f'<a class="card" href="{t}/"><b>{tl}</b><span>{len(plist)} new permits · {fmt(total)}</span></a>')
             sitemap_urls.append(f"{ck}/{t}/")
 
+        # --- contractor profile pages ---
+        by_contractor = {}
+        for p in cps:
+            nm = (p["contractor"] or "").strip()
+            if len(nm) < 4 or nm.upper() in JUNK_CONTRACTORS:
+                continue
+            by_contractor.setdefault(nm.upper(), {"name": nm, "permits": []})["permits"].append(p)
+        contractor_cards = []
+        for ckey, c in sorted(by_contractor.items(), key=lambda kv: -len(kv[1]["permits"])):
+            plist = c["permits"]
+            ctotal = sum(p["value"] or 0 for p in plist)
+            if len(plist) < 2 and ctotal < 100000:
+                continue  # skip thin one-permit/low-value profiles
+            slug = slugify(c["name"])
+            if not slug:
+                continue
+            disp = display_name(c["name"])
+            d = SITE / ck / "contractors" / slug; d.mkdir(parents=True, exist_ok=True)
+            tset = sorted({t for p in plist for t in json.loads(p["trades"] or "[]")})
+            tnames = ", ".join(TRADE_LABELS.get(t, t.title()) for t in tset) or "General"
+            cb = f"""<h1>{html.escape(disp)} — Recent Permit Activity in {label}</h1>
+<p>{html.escape(disp)} pulled {len(plist)} commercial building permit{'s' if len(plist) != 1 else ''} in {label} recently,
+totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tnames)}.</p>
+<div><span class="stat"><b>{len(plist)}</b>recent permits</span>
+<span class="stat"><b>{fmt(ctotal)}</b>total reported value</span></div>
+{permit_table(plist)}
+<p><strong>Know every contractor's next jobsite — the morning after the permit is filed.</strong><br>
+<a class="buy" href="{STRIPE_99}">Track all {label} permits — $99/mo</a></p>"""
+            (d / "index.html").write_text(page(
+                f"{disp} — Permits in {label} ({month}) | JustPermitted",
+                f"{disp} pulled {len(plist)} recent commercial building permits in {label} worth {fmt(ctotal)}. See their projects and jobsite addresses.",
+                cb, "../../../"), encoding="utf-8")
+            sitemap_urls.append(f"{ck}/contractors/{slug}/")
+            if len(contractor_cards) < 12:
+                contractor_cards.append(f'<a class="card" href="contractors/{slug}/"><b>{html.escape(disp)}</b><span>{len(plist)} permits · {fmt(ctotal)}</span></a>')
+        contractors_html = (f'<h2>Most active contractors</h2><div class="cards">{"".join(contractor_cards)}</div>'
+                            if contractor_cards else "")
+
         (SITE / ck).mkdir(parents=True, exist_ok=True)
         cbody = f"""<h1>New Commercial Building Permits in {label} — {month}</h1>
 <p>{len(cps)} recent permits worth {fmt(city_total)} in reported value, updated nightly. Browse by trade:</p>
 <div class="cards">{''.join(trade_links)}</div>
+{contractors_html}
 <h2>Latest permits</h2>{permit_table(cps, 30)}
 {PLANS_HTML}"""
         (SITE / ck / "index.html").write_text(page(
@@ -154,7 +206,7 @@ are being awarded right now.</p>
             cbody, "../"), encoding="utf-8")
         city_cards.append(f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>')
         sitemap_urls.append(f"{ck}/")
-        print(f"[{ck}] {len(by_trade)} trade pages + city index")
+        print(f"[{ck}] {len(by_trade)} trade pages + {len([u for u in sitemap_urls if u.startswith(ck + '/contractors/')])} contractor pages + city index")
 
     SITE.mkdir(exist_ok=True)
     (SITE / "index.html").write_text(page(
