@@ -189,6 +189,51 @@
         "description": "DESCRIPTION"
       },
       "address_fields": ["MAIN_ADDRESS_LINE1", "MAIN_ADDRESS_LINE2"]
+    },
+    "newyork": {
+      "label": "New York City, NY",
+      "domain": "data.cityofnewyork.us",
+      "dataset": "rbx6-tga4",
+      "issued_field": "issued_date",
+      "extra_where": "estimated_job_costs::number > 25000",
+      "fields": {
+        "permit_id": "work_permit",
+        "permit_type": "work_type",
+        "description": "job_description",
+        "value": "estimated_job_costs",
+        "contractor": "applicant_business_name"
+      },
+      "address_fields": ["house_no", "street_name", "borough", "zip_code"]
+    },
+    "seattle": {
+      "label": "Seattle, WA",
+      "domain": "data.seattle.gov",
+      "dataset": "76t5-zqzr",
+      "issued_field": "issueddate",
+      "extra_where": "permitclassmapped='Non-Residential'",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "permitnum",
+        "permit_type": "permittypedesc",
+        "description": "description",
+        "value": "estprojectcost"
+      },
+      "address_fields": ["originaladdress1", "originalcity"]
+    },
+    "philadelphia": {
+      "label": "Philadelphia, PA",
+      "api": "carto",
+      "domain": "phl.carto.com",
+      "table": "permits",
+      "issued_field": "permitissuedate",
+      "extra_where": "commercialorresidential='Commercial'",
+      "fields": {
+        "permit_id": "permitnumber",
+        "permit_type": "typeofwork",
+        "description": "approvedscopeofwork",
+        "contractor": "contractorname"
+      },
+      "address_fields": ["address", "zip"]
     }
   }
 }
