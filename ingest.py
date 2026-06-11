@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Permit Radar — ingestion. Pulls recent permits from city open-data APIs
-(Socrata SODA + ArcGIS REST + custom city portals), normalizes to a common
-schema, upserts into SQLite.
+(Socrata SODA + ArcGIS REST + Carto SQL + custom city portals), normalizes
+to a common schema, upserts into SQLite.
 
 Usage:
   python3 ingest.py                              # live pull, all cities
@@ -159,11 +159,27 @@ def fetch_live_riverside(city_key, ccfg, days):
         keep.append(rec)
     return keep
 
+def fetch_live_carto(city_key, ccfg, days):
+    """Carto SQL API feeds (Philadelphia)."""
+    if requests is None:
+        sys.exit("pip install requests")
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    where = f"{ccfg['issued_field']} >= '{since}'"
+    if ccfg.get("extra_where"):
+        where += f" AND {ccfg['extra_where']}"
+    q = (f"SELECT * FROM {ccfg['table']} WHERE {where} "
+         f"ORDER BY {ccfg['issued_field']} DESC LIMIT 1000")
+    r = requests.get(f"https://{ccfg['domain']}/api/v2/sql", params={"q": q}, timeout=60)
+    r.raise_for_status()
+    return r.json().get("rows", [])
+
 def fetch_live(city_key, ccfg, days):
     if ccfg.get("api") == "arcgis":
         return fetch_live_arcgis(city_key, ccfg, days)
     if ccfg.get("api") == "riverside":
         return fetch_live_riverside(city_key, ccfg, days)
+    if ccfg.get("api") == "carto":
+        return fetch_live_carto(city_key, ccfg, days)
     if requests is None:
         sys.exit("pip install requests")
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00.000")
