@@ -119,6 +119,59 @@ PLANS_HTML = f"""<h2 id="subscribe">Get tomorrow's permits in your inbox at 7am<
 </div>
 <p style="color:#64748b;font-size:13.5px">After subscribing, reply to your receipt email with your metro and trade — your daily digest starts the next morning.</p>"""
 
+PLAYS_BODY = f"""<div class="hero">
+<h1>The Commercial Permit Playbook</h1>
+<p>A building permit isn't just a lead for the trade on the permit — it predicts the next five purchases
+at that address. Six plays businesses run with permit data, with real permits from our live feeds.</p>
+</div>
+
+<div class="cards">
+
+<div class="card"><b>Signage permit → Janitorial, security &amp; services</b>
+<span><strong>The signal:</strong> A commercial signage permit means a new tenant is 4–8 weeks from opening day.
+They need recurring cleaning, security, waste pickup, and a point-of-sale vendor — and most haven't chosen any of them yet.<br><br>
+<strong>The pitch:</strong> "Saw your sign permit go up at [address] — congrats on the new location.
+Can we quote weekly cleaning before your soft-open?"<br><br>
+<em>From our feed: sign permits for a Chevron, a CVS, and two new cafes hit Riverside alone in one week.</em></span></div>
+
+<div class="card"><b>New restaurant permit → Kitchen, grease &amp; food supply</b>
+<span><strong>The signal:</strong> A new-restaurant or drive-thru build-out means someone is about to buy hood systems,
+grease interceptors, refrigeration, smallwares — and sign recurring contracts for hood cleaning and grease-trap service.<br><br>
+<strong>The pitch:</strong> "We service every drive-thru on that corridor — want a hood-cleaning quote before the fire marshal asks for one?"<br><br>
+<em>From our feed: a $1.7M new drive-thru restaurant permitted in Los Angeles, grease interceptor permits in Riverside the same week.</em></span></div>
+
+<div class="card"><b>Tenant improvement → Furniture, IT &amp; everything inside</b>
+<span><strong>The signal:</strong> A TI permit means a business is moving or expanding. Desks, network cabling,
+AV systems, access control, movers, interior signage — all unpurchased the day the permit is filed.<br><br>
+<strong>The pitch:</strong> "Saw the build-out starting at [address]. We handle structured cabling — can we walk the space before drywall closes?"<br><br>
+<em>From our feed: a $350,000 first-tenant dental office permitted in Riverside June 4 — equipment, IT, and signage vendors all unchosen.</em></span></div>
+
+<div class="card"><b>Commercial re-roof → Solar &amp; rooftop equipment</b>
+<span><strong>The signal:</strong> A fresh commercial roof is the ideal — and sometimes only — window to install solar.
+Panel installers who wait until the roof is old quote against a tear-off; the ones who call at the re-roof permit quote clean.<br><br>
+<strong>The pitch:</strong> "Your new roof is the perfect foundation for solar — quote now and the racking goes on while the warranty's fresh."<br><br>
+<em>From our feed: a 1,552-panel, $1M commercial solar install permitted in Riverside — on a recently re-covered roof.</em></span></div>
+
+<div class="card"><b>Demolition permit → Everyone, 6–18 months early</b>
+<span><strong>The signal:</strong> Nobody pays to demolish a commercial building without a plan for the lot.
+A demo permit is the earliest public signal of new construction — months before trade packages go to bid.<br><br>
+<strong>The pitch:</strong> "Saw the demo at [address]. When the new building bids, we'd like to be on the list — who's the GC?"<br><br>
+<em>From our feed: demolition permits in Chicago, LA and Henderson this week — each one a future jobsite.</em></span></div>
+
+<div class="card"><b>EV charger permit → Electrical, concrete &amp; striping</b>
+<span><strong>The signal:</strong> EV charger installs come in waves across a property portfolio — one site this month
+means sister sites next quarter. They also mean trenching, concrete pads, bollards, and lot re-striping.<br><br>
+<strong>The pitch:</strong> "We did the striping after your charger install at [address] — want pricing for the other locations before the next phase?"<br><br>
+<em>From our feed: a $320,000 17-charger installation permitted in Riverside, plus single-charger permits the same week.</em></span></div>
+
+</div>
+
+<h2>The pattern</h2>
+<p><strong>Permit data is the earliest public signal that money is about to move at an address.</strong>
+Whoever sees it first calls first, and whoever calls first usually wins. JustPermitted sends the signals
+to your inbox every morning at 7am — no database to remember to search.</p>
+{PLANS_HTML}"""
+
 def main():
     conn = sqlite3.connect(ROOT / CFG["db_path"]); conn.row_factory = sqlite3.Row
     permits = [dict(r) for r in conn.execute(
@@ -229,8 +282,16 @@ worth calling about — the week they're filed, before your competitors hear abo
 </div>
 <h2>Live coverage</h2>
 <div class="cards">{''.join(city_cards)}</div>
+<p><a href="plays/"><strong>The Commercial Permit Playbook →</strong></a> Six ways businesses turn permit data into contracts — with real permits from our live feeds.</p>
 {PLANS_HTML}""",
         "./"), encoding="utf-8")
+
+    (SITE / "plays").mkdir(parents=True, exist_ok=True)
+    (SITE / "plays" / "index.html").write_text(page(
+        "The Commercial Permit Playbook | JustPermitted",
+        "Six plays businesses run with commercial permit data: signage permits, tenant improvements, re-roofs, demolitions and more — with real examples.",
+        PLAYS_BODY, "../"), encoding="utf-8")
+    sitemap_urls.append("plays/")
 
     today = datetime.now().strftime("%Y-%m-%d")
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
