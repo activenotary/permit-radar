@@ -234,6 +234,69 @@
         "contractor": "contractorname"
       },
       "address_fields": ["address", "zip"]
+    },
+    "anaheim": {
+      "label": "Anaheim, CA",
+      "api": "arcgis",
+      "endpoint": "https://services3.arcgis.com/hPs600I3X0RTaaaq/arcgis/rest/services/Accela_Building_Permits/FeatureServer/0/query",
+      "issued_field": "permitissued",
+      "extra_where": "comres LIKE 'Commercial%'",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "casenumber",
+        "permit_type": "typeofwork",
+        "description": "description",
+        "value": "jobvaluation",
+        "contractor": "contractorsname"
+      },
+      "address_fields": ["address"]
+    },
+    "sacramento": {
+      "label": "Sacramento County, CA",
+      "api": "arcgis",
+      "endpoint": "https://services1.arcgis.com/5NARefyPVtAeuJPU/arcgis/rest/services/Permits/FeatureServer/0/query",
+      "issued_field": "ISSUED_DATE",
+      "extra_where": "Application_Type='Commercial'",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "Application",
+        "permit_type": "Application_Subtype",
+        "description": "WorkDescription",
+        "value": "Valuation",
+        "contractor": "Contractor"
+      },
+      "address_fields": ["Address"]
+    },
+    "sanjose": {
+      "label": "San Jose, CA",
+      "api": "csv",
+      "url": "https://data.sanjoseca.gov/dataset/2723cdec-a639-4b63-bded-175338c45473/resource/045b3678-e923-4002-b696-300955bc6d06/download/buildingpermits30.csv",
+      "issued_field": "ISSUEDATE",
+      "equals": {"FOLDERDESC": "Commercial/Industrial"},
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "FOLDERNUMBER",
+        "permit_type": "SUBTYPEDESCRIPTION",
+        "description": "WORKDESCRIPTION",
+        "value": "PERMITVALUATION",
+        "contractor": "CONTRACTOR"
+      },
+      "address_fields": ["gx_location"]
+    },
+    "sandiego": {
+      "label": "San Diego, CA",
+      "api": "csv",
+      "url": "https://seshat.datasd.org/development_permits_set2/permits_set2_active_datasd.csv",
+      "issued_field": "date_approval_issue",
+      "equals": {"approval_status": "Issued"},
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "approval_id",
+        "permit_type": "approval_type",
+        "description": "approval_scope",
+        "contractor": "approval_permit_holder"
+      },
+      "address_fields": ["address_job"]
     }
   }
 }
