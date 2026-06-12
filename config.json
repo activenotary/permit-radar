@@ -86,7 +86,8 @@
         "permit_type": "Permit Sub-Type",
         "description": "Description",
         "value": "Valuation",
-        "contractor": "Contractor Name"
+        "contractor": "Contractor Name",
+        "phone": "Contractor Phone"
       },
       "address_fields": ["Site Address"]
     },
@@ -115,7 +116,8 @@
         "permit_type": "PermitType",
         "description": "DetailDescriptionComments",
         "value": "EstimatedValue",
-        "contractor": "ContractorName"
+        "contractor": "ContractorName",
+        "phone": "ContractorPhone"
       },
       "address_fields": ["PropertyAddress"]
     },
@@ -247,7 +249,8 @@
         "permit_type": "typeofwork",
         "description": "description",
         "value": "jobvaluation",
-        "contractor": "contractorsname"
+        "contractor": "contractorsname",
+        "phone": "contractorsphone"
       },
       "address_fields": ["address"]
     },
