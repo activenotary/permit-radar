@@ -12,6 +12,19 @@ BASE = "https://justpermitted.com"
 STRIPE_49 = "https://buy.stripe.com/28E4gy3XF9h80Ded8IfMA00"   # 1 Metro, 1 Trade
 STRIPE_99 = "https://buy.stripe.com/cNi6oGbq71OGadO5GgfMA01"   # 1 Metro, All Trades
 
+REGIONS = [
+    ("Southern California", ["losangeles", "anaheim", "riverside", "sandiego"]),
+    ("Northern California", ["sanfrancisco", "sanjose", "sacramento"]),
+    ("Nevada", ["lasvegas", "henderson"]),
+    ("Arizona", ["tucson"]),
+    ("Texas", ["austin"]),
+    ("Pacific Northwest", ["seattle"]),
+    ("Mountain West", ["denver"]),
+    ("Midwest", ["chicago"]),
+    ("South", ["nashville", "neworleans", "miami"]),
+    ("Northeast", ["newyork", "philadelphia"]),
+]
+
 TRADE_LABELS = {
     "roofing": "Roofing", "hvac": "HVAC & Mechanical", "electrical": "Electrical",
     "plumbing": "Plumbing", "demolition": "Demolition", "general_renovation": "Renovation & New Construction",
@@ -76,7 +89,7 @@ def page(title, desc, body, home):
 </div></main>
 <footer><div class="wrap">Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
 Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com<br>
-<a href="{home}plays/">Playbook</a> · <a href="{home}faq/">FAQ</a> · <a href="{home}terms/">Terms</a> · <a href="{home}privacy/">Privacy</a> · <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></div></footer>
+<a href="{home}plays/">Playbook</a> · <a href="{home}equipment-rental/">Equipment Rental</a> · <a href="{home}faq/">FAQ</a> · <a href="{home}terms/">Terms</a> · <a href="{home}privacy/">Privacy</a> · <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></div></footer>
 <script data-goatcounter="https://justpermitted.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body></html>"""
 
@@ -124,7 +137,7 @@ PLANS_HTML = f"""<h2 id="subscribe">Get tomorrow's permits in your inbox at 7am<
     <a class="buy" href="{STRIPE_99}">Subscribe — $99/mo</a>
   </div>
 </div>
-<p style="color:#64748b;font-size:13.5px">After subscribing, reply to your receipt email with your metro and trade — your daily digest starts the next morning.</p>"""
+<p style="color:#64748b;font-size:13.5px">You'll enter your metro and trade right at checkout — your daily digest starts the next morning.</p>"""
 
 PLAYS_BODY = f"""<div class="hero">
 <h1>The Commercial Permit Playbook</h1>
@@ -179,6 +192,54 @@ Whoever sees it first calls first, and whoever calls first usually wins. JustPer
 to your inbox every morning at 7am — no database to remember to search.</p>
 {PLANS_HTML}"""
 
+EQUIPMENT_BODY = f"""<div class="hero">
+<h1>Heavy Equipment Rental Leads from New Commercial Permits</h1>
+<p>Every commercial building permit is a rental order that hasn't been placed yet. The yard that knows about
+the jobsite first gets the call for the iron — and the fencing, the power, and the sanitation that go with it.
+JustPermitted reads every permit in your metro the night it's published and tells you what's about to be rented.</p>
+</div>
+
+<div class="cards">
+
+<div class="card"><b>Demolition permits → Excavators &amp; hauling</b>
+<span>Excavators, skid steers, breakers, dumpsters, water trucks for dust control. A demo permit means iron on
+site within weeks — and a clean lot that needs more equipment right after.<br><br>
+<em>From our feeds this week: demolition permits in Chicago, Los Angeles and Henderson.</em></span></div>
+
+<div class="card"><b>New construction &amp; grading → The whole yard</b>
+<span>Temporary fencing, office trailers, generators, light towers, portable sanitation, compaction equipment —
+new builds rent for months, not days.<br><br>
+<em>From our feeds: a $2.5M grading permit on Tropical Pkwy in Las Vegas and a $1.7M new drive-thru build in Los Angeles.</em></span></div>
+
+<div class="card"><b>Tenant improvements → Lifts &amp; power</b>
+<span>Scissor lifts, dumpsters, temporary power, air scrubbers. TI permits are short, dense rental windows —
+and metros produce dozens of them every week.<br><br>
+<em>From our feeds: a $350,000 first-tenant dental office build-out in Riverside, hotel floor finish-outs in Austin.</em></span></div>
+
+<div class="card"><b>Commercial roofing → Reach &amp; hauling</b>
+<span>Boom lifts, telehandlers, dump trailers, debris chutes, safety gear. Every re-roof permit is two to six
+weeks of access equipment on rent.<br><br>
+<em>From our feeds: 68 roofing permits worth $28M in Chicago alone, plus commercial tear-offs in Riverside and Tucson.</em></span></div>
+
+<div class="card"><b>Concrete &amp; masonry → Mixers &amp; compaction</b>
+<span>Mixers, saws, plate compactors, concrete pumps, forms. Pours are scheduled fast once the permit lands —
+the yard that calls first is in the pour schedule.<br><br>
+<em>From our feeds: 37 concrete &amp; masonry permits worth $10.2M in Chicago this period.</em></span></div>
+
+<div class="card"><b>Signage &amp; electrical → Bucket trucks</b>
+<span>Bucket trucks and boom lifts for sign installs and exterior electrical. Sign permits also mean a brand-new
+tenant about to need everything else on this page.<br><br>
+<em>From our feeds: 20 signage permits in one Riverside week — a Chevron, a CVS, two cafes.</em></span></div>
+
+</div>
+
+<h2>The math for a rental counter</h2>
+<p>One scissor lift on a one-month TI rental covers the cost of this service many times over.
+Your counter gets a list every morning of every jobsite in the metro that just got permission to start work —
+with the project value, the address, and the contractor of record to call. Equipment rental businesses should
+choose the <strong>All Trades</strong> plan: every permit type in your metro is a rental signal.</p>
+{PLANS_HTML}"""
+
 FAQ_BODY = f"""<div class="hero"><h1>Frequently asked questions</h1>
 <p>If yours isn't here, email <a href="mailto:support@justpermitted.com">support@justpermitted.com</a> — a human reads every message.</p></div>
 
@@ -190,7 +251,8 @@ we're exactly as fast as the city itself. Either way, you see it the morning aft
 <div class="faq"><b>Which cities do you cover?</b>
 <p>18 metros and growing: New York City, Los Angeles, Chicago, Miami-Dade, Philadelphia, San Francisco,
 Austin, Seattle, Denver, Nashville, Las Vegas, New Orleans, Sacramento County, San Jose, Anaheim, Tucson,
-Riverside and Henderson. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
+Riverside and Henderson. One subscription covers your region's adjacent metros — a Las Vegas plan includes
+Henderson. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
 
 <div class="faq"><b>What's in each lead?</b>
 <p>Project description, jobsite address, reported dollar value, issue date, the contractor of record,
@@ -208,8 +270,8 @@ so "your" lead is never resold to a list of competitors.</p></div>
 and we'll send you tomorrow morning's digest free. No card required.</p></div>
 
 <div class="faq"><b>How do I set my metro and trade?</b>
-<p>After subscribing, reply to your Stripe receipt with your metro and trade(s). Your daily digest starts the next morning.
-Need to change it later? Email support anytime.</p></div>
+<p>You'll enter your metro, trade, and business type right on the checkout page when you subscribe.
+Your daily digest starts the next morning. Need to change anything later? Email support anytime.</p></div>
 
 <div class="faq"><b>Can I cancel?</b>
 <p>Anytime, instantly, from the link in any Stripe receipt — or just email us. No contracts, no phone calls, no hard feelings.</p></div>
@@ -258,7 +320,7 @@ def main():
         if p["value"] and p["value"] > 500_000_000:
             p["value"] = None
     month = datetime.now().strftime("%B %Y")
-    city_cards = []
+    city_cards = {}
     sitemap_urls = [""]
 
     for ck, ccfg in CFG["cities"].items():
@@ -344,9 +406,21 @@ totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tname
             f"New Commercial Building Permits in {label} ({month}) | JustPermitted",
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
             cbody, "../"), encoding="utf-8")
-        city_cards.append(f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>')
+        city_cards[ck] = f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>'
         sitemap_urls.append(f"{ck}/")
         print(f"[{ck}] {len(by_trade)} trade pages + {len([u for u in sitemap_urls if u.startswith(ck + '/contractors/')])} contractor pages + city index")
+
+    region_html = ""
+    used = set()
+    for rname, rcities in REGIONS:
+        cards = [city_cards[ck] for ck in rcities if ck in city_cards]
+        used.update(ck for ck in rcities if ck in city_cards)
+        if not cards:
+            continue
+        region_html += f'<h3 style="margin:26px 0 0;color:#334155">{rname}</h3><div class="cards">{"".join(cards)}</div>'
+    leftover = [v for k, v in city_cards.items() if k not in used]
+    if leftover:
+        region_html += f'<h3 style="margin:26px 0 0;color:#334155">More metros</h3><div class="cards">{"".join(leftover)}</div>'
 
     SITE.mkdir(exist_ok=True)
     (SITE / "index.html").write_text(page(
@@ -359,8 +433,11 @@ worth calling about — the week they're filed, before your competitors hear abo
 <a class="buy" href="#subscribe">See plans →</a>
 </div>
 <h2>Live coverage</h2>
-<div class="cards">{''.join(city_cards)}</div>
-<p><a href="plays/"><strong>The Commercial Permit Playbook →</strong></a> Six ways businesses turn permit data into contracts — with real permits from our live feeds.</p>
+<p style="color:#64748b">One subscription covers your region's adjacent metros — a Las Vegas plan includes Henderson,
+a Los Angeles plan can include Anaheim and Riverside. Just tell us at checkout.</p>
+{region_html}
+<p><a href="plays/"><strong>The Commercial Permit Playbook →</strong></a> Six ways businesses turn permit data into contracts — with real permits from our live feeds.
+<br><a href="equipment-rental/"><strong>For Equipment Rental companies →</strong></a> Every permit type is a rental signal.</p>
 {PLANS_HTML}""",
         "./"), encoding="utf-8")
 
@@ -375,6 +452,9 @@ worth calling about — the week they're filed, before your competitors hear abo
         ("faq", "FAQ | JustPermitted",
          "How fresh is the data, which cities are covered, pricing, cancellation — answers about JustPermitted's daily commercial permit alerts.",
          FAQ_BODY),
+        ("equipment-rental", "Heavy Equipment Rental Leads from Commercial Permits | JustPermitted",
+         "Daily permit alerts for equipment rental companies: demolition, grading, TI, roofing and concrete permits mean excavators, lifts, fencing and power about to be rented.",
+         EQUIPMENT_BODY),
         ("terms", "Terms of Service | JustPermitted", "JustPermitted terms of service.", TERMS_BODY),
         ("privacy", "Privacy Policy | JustPermitted", "JustPermitted privacy policy.", PRIVACY_BODY),
     ):
