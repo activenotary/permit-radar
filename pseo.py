@@ -25,6 +25,12 @@ CSS = """*{box-sizing:border-box}body{margin:0;font-family:-apple-system,'Segoe 
 .brand{color:#fff;text-decoration:none;font-weight:800;font-size:19px;letter-spacing:-.01em}
 .brand em{color:#60a5fa;font-style:normal}
 .cta{background:#2563eb;color:#fff;text-decoration:none;font-weight:700;padding:8px 18px;border-radius:8px;font-size:14px}
+.navlink{color:#cbd5e1;text-decoration:none;font-size:14px;margin-right:18px}
+.navlink:hover{color:#fff}
+.faq{border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;margin:12px 0;background:#fff}
+.faq b{font-size:16px}
+.faq p{color:#475569;margin:8px 0 0}
+footer a{color:#94a3b8}
 .wrap{max-width:960px;margin:0 auto;padding:0 20px}
 .hero{padding:46px 0 10px}
 .hero h1{font-size:38px;margin:0 0 10px;letter-spacing:-.02em;line-height:1.15}
@@ -63,13 +69,14 @@ def page(title, desc, body, home):
 <style>{CSS}</style></head><body>
 <div class="bar"><div class="wrap">
 <a class="brand" href="{home}">Just<em>Permitted</em></a>
-<a class="cta" href="{home}#subscribe">Get Daily Alerts</a>
+<span><a class="navlink" href="{home}plays/">Playbook</a><a class="navlink" href="{home}faq/">FAQ</a><a class="cta" href="{home}#subscribe">Get Daily Alerts</a></span>
 </div></div>
 <main><div class="wrap">
 {body}
 </div></main>
 <footer><div class="wrap">Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
-Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com</div></footer>
+Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com<br>
+<a href="{home}plays/">Playbook</a> · <a href="{home}faq/">FAQ</a> · <a href="{home}terms/">Terms</a> · <a href="{home}privacy/">Privacy</a> · <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></div></footer>
 <script data-goatcounter="https://justpermitted.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body></html>"""
 
@@ -171,6 +178,77 @@ means sister sites next quarter. They also mean trenching, concrete pads, bollar
 Whoever sees it first calls first, and whoever calls first usually wins. JustPermitted sends the signals
 to your inbox every morning at 7am — no database to remember to search.</p>
 {PLANS_HTML}"""
+
+FAQ_BODY = f"""<div class="hero"><h1>Frequently asked questions</h1>
+<p>If yours isn't here, email <a href="mailto:support@justpermitted.com">support@justpermitted.com</a> — a human reads every message.</p></div>
+
+<div class="faq"><b>How fresh is the data?</b>
+<p>Most of our cities publish daily — your digest typically shows permits issued one to two days ago.
+A few cities (such as Las Vegas and Riverside) refresh their public records weekly, so for those metros
+we're exactly as fast as the city itself. Either way, you see it the morning after it appears.</p></div>
+
+<div class="faq"><b>Which cities do you cover?</b>
+<p>18 metros and growing: New York City, Los Angeles, Chicago, Miami-Dade, Philadelphia, San Francisco,
+Austin, Seattle, Denver, Nashville, Las Vegas, New Orleans, Sacramento County, San Jose, Anaheim, Tucson,
+Riverside and Henderson. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
+
+<div class="faq"><b>What's in each lead?</b>
+<p>Project description, jobsite address, reported dollar value, issue date, the contractor of record,
+and a lead score — plus the contractor's phone number in cities that publish it.</p></div>
+
+<div class="faq"><b>Is this a pay-per-lead service?</b>
+<p>No. One flat subscription gets you every commercial permit in your metro. We never sell leads individually,
+so "your" lead is never resold to a list of competitors.</p></div>
+
+<div class="faq"><b>How do I receive my leads?</b>
+<p>One email every morning around 7am. No dashboard, no login, nothing to remember to check.</p></div>
+
+<div class="faq"><b>Can I try it before paying?</b>
+<p>Yes — email <a href="mailto:support@justpermitted.com">support@justpermitted.com</a> with your metro and trade,
+and we'll send you tomorrow morning's digest free. No card required.</p></div>
+
+<div class="faq"><b>How do I set my metro and trade?</b>
+<p>After subscribing, reply to your Stripe receipt with your metro and trade(s). Your daily digest starts the next morning.
+Need to change it later? Email support anytime.</p></div>
+
+<div class="faq"><b>Can I cancel?</b>
+<p>Anytime, instantly, from the link in any Stripe receipt — or just email us. No contracts, no phone calls, no hard feelings.</p></div>
+
+<div class="faq"><b>Where does the data come from?</b>
+<p>Official city and county public records, collected nightly by our automated pipeline.
+Always verify permit details with the issuing authority before bidding or acting.</p></div>
+{PLANS_HTML}"""
+
+TERMS_BODY = """<div class="hero"><h1>Terms of Service</h1></div>
+<p><strong>The service.</strong> JustPermitted provides daily email digests and web pages summarizing
+commercial building permit information drawn from public municipal and county records.</p>
+<p><strong>Subscriptions.</strong> Plans are billed monthly through Stripe. You can cancel at any time via the
+link in any Stripe receipt or by emailing <a href="mailto:support@justpermitted.com">support@justpermitted.com</a>;
+cancellation stops future charges. </p>
+<p><strong>Data accuracy.</strong> Permit information is republished from public records as-is. Cities sometimes
+publish errors, delays, or incomplete records, and our automated categorization may occasionally mislabel a permit.
+The service is provided without warranty of accuracy, completeness, or fitness for a particular purpose.
+Always verify permit details with the issuing authority before bidding, contacting a party, or making business decisions.</p>
+<p><strong>Acceptable use.</strong> Digests are licensed for use within your business. Reselling or republishing
+the service's output as a competing data product is not permitted.</p>
+<p><strong>Liability.</strong> To the maximum extent permitted by law, JustPermitted's total liability for any claim
+related to the service is limited to the amount you paid in the month the claim arose.</p>
+<p><strong>Changes.</strong> Coverage (cities, fields, formats) may change as public data sources change.
+We may update these terms; continued use after an update constitutes acceptance.</p>
+<p>Questions: <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></p>"""
+
+PRIVACY_BODY = """<div class="hero"><h1>Privacy Policy</h1></div>
+<p><strong>What we collect.</strong> When you subscribe, we receive your email address and plan details from Stripe,
+plus the metro/trade preferences you send us. That's what we need to deliver your digest — nothing more.</p>
+<p><strong>Payments.</strong> All payments are processed by Stripe. Your card number never touches our systems.</p>
+<p><strong>Analytics.</strong> We use GoatCounter, a privacy-respecting analytics tool that counts visits without
+cookies, fingerprinting, or tracking you across the web.</p>
+<p><strong>Contractor information.</strong> Names and phone numbers shown on this site come directly from public
+municipal permit and licensing records. If information about your business appears here and you'd like it corrected
+or removed, email us and we'll handle it promptly.</p>
+<p><strong>What we never do.</strong> We don't sell your information, share your email with anyone,
+or send you anything other than the digests you subscribed to.</p>
+<p>Questions or requests: <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></p>"""
 
 def main():
     conn = sqlite3.connect(ROOT / CFG["db_path"]); conn.row_factory = sqlite3.Row
@@ -292,6 +370,17 @@ worth calling about — the week they're filed, before your competitors hear abo
         "Six plays businesses run with commercial permit data: signage permits, tenant improvements, re-roofs, demolitions and more — with real examples.",
         PLAYS_BODY, "../"), encoding="utf-8")
     sitemap_urls.append("plays/")
+
+    for slug, title, desc, body in (
+        ("faq", "FAQ | JustPermitted",
+         "How fresh is the data, which cities are covered, pricing, cancellation — answers about JustPermitted's daily commercial permit alerts.",
+         FAQ_BODY),
+        ("terms", "Terms of Service | JustPermitted", "JustPermitted terms of service.", TERMS_BODY),
+        ("privacy", "Privacy Policy | JustPermitted", "JustPermitted privacy policy.", PRIVACY_BODY),
+    ):
+        (SITE / slug).mkdir(parents=True, exist_ok=True)
+        (SITE / slug / "index.html").write_text(page(title, desc, body, "../"), encoding="utf-8")
+        sitemap_urls.append(f"{slug}/")
 
     today = datetime.now().strftime("%Y-%m-%d")
     sm = ['<?xml version="1.0" encoding="UTF-8"?>',
