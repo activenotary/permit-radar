@@ -25,6 +25,24 @@ REGIONS = [
     ("Northeast", ["newyork", "philadelphia"]),
 ]
 
+SALES_METROS = [
+    ("greater-la", "Greater Los Angeles", "LA, Orange County & the Inland Empire", ["losangeles", "anaheim", "riverside"]),
+    ("san-diego", "San Diego County", "", ["sandiego"]),
+    ("bay-area", "Bay Area", "San Francisco & San Jose", ["sanfrancisco", "sanjose"]),
+    ("sacramento", "Sacramento / Central CA", "", ["sacramento"]),
+    ("las-vegas", "Las Vegas Valley", "Las Vegas & Henderson", ["lasvegas", "henderson"]),
+    ("tucson", "Tucson, AZ", "", ["tucson"]),
+    ("austin", "Austin, TX", "", ["austin"]),
+    ("seattle", "Seattle, WA", "", ["seattle"]),
+    ("denver", "Denver, CO", "", ["denver"]),
+    ("chicago", "Chicago, IL", "", ["chicago"]),
+    ("nashville", "Nashville, TN", "", ["nashville"]),
+    ("neworleans", "New Orleans, LA", "", ["neworleans"]),
+    ("miami", "Miami-Dade, FL", "", ["miami"]),
+    ("newyork", "New York City, NY", "", ["newyork"]),
+    ("philadelphia", "Philadelphia, PA", "", ["philadelphia"]),
+]
+
 TRADE_LABELS = {
     "roofing": "Roofing", "hvac": "HVAC & Mechanical", "electrical": "Electrical",
     "plumbing": "Plumbing", "demolition": "Demolition", "general_renovation": "Renovation & New Construction",
@@ -248,11 +266,11 @@ FAQ_BODY = f"""<div class="hero"><h1>Frequently asked questions</h1>
 A few cities (such as Las Vegas and Riverside) refresh their public records weekly, so for those metros
 we're exactly as fast as the city itself. Either way, you see it the morning after it appears.</p></div>
 
-<div class="faq"><b>Which cities do you cover?</b>
-<p>18 metros and growing: New York City, Los Angeles, Chicago, Miami-Dade, Philadelphia, San Francisco,
-Austin, Seattle, Denver, Nashville, Las Vegas, New Orleans, Sacramento County, San Jose, Anaheim, Tucson,
-Riverside and Henderson. One subscription covers your region's adjacent metros — a Las Vegas plan includes
-Henderson. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
+<div class="faq"><b>Which metros do you cover?</b>
+<p>Greater Los Angeles (LA, Orange County &amp; the Inland Empire), the Bay Area (San Francisco &amp; San Jose),
+Sacramento, Las Vegas Valley (Las Vegas &amp; Henderson), Tucson, Austin, Seattle, Denver, Chicago, Nashville,
+New Orleans, Miami-Dade, New York City and Philadelphia — and growing. One subscription covers your whole metro,
+every city in it. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
 
 <div class="faq"><b>What's in each lead?</b>
 <p>Project description, jobsite address, reported dollar value, issue date, the contractor of record,
@@ -408,7 +426,7 @@ totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tname
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
             cbody, "../"), encoding="utf-8")
         city_cards[ck] = f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>'
-        city_stats[ck] = (label, len(cps), fmt(city_total))
+        city_stats[ck] = (label, len(cps), city_total)
         sitemap_urls.append(f"{ck}/")
         print(f"[{ck}] {len(by_trade)} trade pages + {len([u for u in sitemap_urls if u.startswith(ck + '/contractors/')])} contractor pages + city index")
 
@@ -435,22 +453,26 @@ worth calling about — the week they're filed, before your competitors hear abo
 <a class="buy" href="subscribe/">See plans →</a>
 </div>
 <h2>Live coverage</h2>
-<p style="color:#64748b">One subscription covers your region's adjacent metros — a Las Vegas plan includes Henderson,
-a Los Angeles plan can include Anaheim and Riverside. Just tell us at checkout.</p>
+<p style="color:#64748b">One subscription covers your whole metro — Greater Los Angeles includes LA, Orange County
+and the Inland Empire; Las Vegas Valley includes Henderson; the Bay Area includes San Francisco and San Jose.</p>
 {region_html}
 <p><a href="plays/"><strong>The Commercial Permit Playbook →</strong></a> Six ways businesses turn permit data into contracts — with real permits from our live feeds.
 <br><a href="equipment-rental/"><strong>For Equipment Rental companies →</strong></a> Every permit type is a rental signal.</p>
 {PLANS_HTML}""",
         "./"), encoding="utf-8")
 
-    # /subscribe picker page
+    # /subscribe picker page — sells SALES_METROS (true work markets), not individual cities
     metro_opts = '<option value="" selected>Choose your metro…</option>'
-    for rname, rcities in REGIONS:
-        group = "".join(
-            f'<option value="{ck}" data-stats="{html.escape(f"{city_stats[ck][1]} recent permits · {city_stats[ck][2]} tracked")}">{html.escape(city_stats[ck][0])}</option>'
-            for ck in rcities if ck in city_stats)
-        if group:
-            metro_opts += f'<optgroup label="{html.escape(rname)}">{group}</optgroup>'
+    for mkey, mlabel, msub, mcities in SALES_METROS:
+        have = [ck for ck in mcities if ck in city_stats]
+        if not have:
+            continue  # metro hidden until its feed exists (e.g. San Diego)
+        n = sum(city_stats[ck][1] for ck in have)
+        tot = sum(city_stats[ck][2] for ck in have)
+        sub = f" — {msub}" if msub else ""
+        stats_txt = f"{n} recent permits · {fmt(tot)} tracked{sub}"
+        metro_opts += (f'<option value="{mkey}" data-stats="{html.escape(stats_txt)}">'
+                       f'{html.escape(mlabel)}</option>')
     trade_opts = '<option value="all" selected>All trades</option>' + "".join(
         f'<option value="{k}">{html.escape(v)}</option>' for k, v in TRADE_LABELS.items() if k != "other")
     sel_style = "width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;margin:6px 0 16px;background:#fff"
