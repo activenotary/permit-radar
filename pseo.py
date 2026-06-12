@@ -82,14 +82,14 @@ def page(title, desc, body, home):
 <style>{CSS}</style></head><body>
 <div class="bar"><div class="wrap">
 <a class="brand" href="{home}">Just<em>Permitted</em></a>
-<span><a class="navlink" href="{home}plays/">Playbook</a><a class="navlink" href="{home}faq/">FAQ</a><a class="cta" href="{home}#subscribe">Get Daily Alerts</a></span>
+<span><a class="navlink" href="{home}plays/">Playbook</a><a class="navlink" href="{home}faq/">FAQ</a><a class="cta" href="{home}subscribe/">Get Daily Alerts</a></span>
 </div></div>
 <main><div class="wrap">
 {body}
 </div></main>
 <footer><div class="wrap">Data: public municipal permit records, updated nightly. Generated {datetime.now().strftime('%B %d, %Y')}.
 Verify permit details with the issuing authority before acting. © JustPermitted · justpermitted.com<br>
-<a href="{home}plays/">Playbook</a> · <a href="{home}equipment-rental/">Equipment Rental</a> · <a href="{home}faq/">FAQ</a> · <a href="{home}terms/">Terms</a> · <a href="{home}privacy/">Privacy</a> · <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></div></footer>
+<a href="{home}subscribe/">Subscribe</a> · <a href="{home}plays/">Playbook</a> · <a href="{home}equipment-rental/">Equipment Rental</a> · <a href="{home}faq/">FAQ</a> · <a href="{home}terms/">Terms</a> · <a href="{home}privacy/">Privacy</a> · <a href="mailto:support@justpermitted.com">support@justpermitted.com</a></div></footer>
 <script data-goatcounter="https://justpermitted.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body></html>"""
 
@@ -127,17 +127,17 @@ PLANS_HTML = f"""<h2 id="subscribe">Get tomorrow's permits in your inbox at 7am<
     <h3>Single Trade</h3>
     <div class="price">$49<span class="per">/month</span></div>
     <ul><li>Daily email digest for your metro</li><li>Your trade only (e.g. roofing)</li><li>Project values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
-    <a class="buy" href="{STRIPE_49}">Subscribe — $49/mo</a>
+    <a class="buy" href="{BASE}/subscribe/">Subscribe — $49/mo</a>
   </div>
   <div class="plan popular">
     <span class="badge">MOST POPULAR</span>
     <h3>All Trades</h3>
     <div class="price">$99<span class="per">/month</span></div>
     <ul><li>Daily email digest for your metro</li><li>Every trade category included</li><li>Project values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
-    <a class="buy" href="{STRIPE_99}">Subscribe — $99/mo</a>
+    <a class="buy" href="{BASE}/subscribe/">Subscribe — $99/mo</a>
   </div>
 </div>
-<p style="color:#64748b;font-size:13.5px">You'll enter your metro and trade right at checkout — your daily digest starts the next morning.</p>"""
+<p style="color:#64748b;font-size:13.5px">Pick your metro and trade on the next page — your daily digest starts the next morning.</p>"""
 
 PLAYS_BODY = f"""<div class="hero">
 <h1>The Commercial Permit Playbook</h1>
@@ -270,8 +270,8 @@ so "your" lead is never resold to a list of competitors.</p></div>
 and we'll send you tomorrow morning's digest free. No card required.</p></div>
 
 <div class="faq"><b>How do I set my metro and trade?</b>
-<p>You'll enter your metro, trade, and business type right on the checkout page when you subscribe.
-Your daily digest starts the next morning. Need to change anything later? Email support anytime.</p></div>
+<p>You'll pick your metro, trade, and business type on our subscribe page — they travel with your checkout
+automatically. Your daily digest starts the next morning. Need to change anything later? Email support anytime.</p></div>
 
 <div class="faq"><b>Can I cancel?</b>
 <p>Anytime, instantly, from the link in any Stripe receipt — or just email us. No contracts, no phone calls, no hard feelings.</p></div>
@@ -321,6 +321,7 @@ def main():
             p["value"] = None
     month = datetime.now().strftime("%B %Y")
     city_cards = {}
+    city_stats = {}
     sitemap_urls = [""]
 
     for ck, ccfg in CFG["cities"].items():
@@ -347,7 +348,7 @@ are being awarded right now.</p>
 <span class="stat"><b>{fmt(total)}</b>total reported value</span>
 <span class="stat"><b>{fmt(biggest['value'])}</b>largest project</span></div>
 {permit_table(plist)}
-<p><strong>Want tomorrow's list at 7am?</strong><br><a class="buy" href="{STRIPE_49}">Get {tl} alerts for {label} — $49/mo</a></p>"""
+<p><strong>Want tomorrow's list at 7am?</strong><br><a class="buy" href="{BASE}/subscribe/">Get {tl} alerts for {label} — $49/mo</a></p>"""
             (d / "index.html").write_text(page(
                 f"New {tl} Permits in {label} ({month}) | JustPermitted",
                 f"{len(plist)} new {tl.lower()} building permits in {label}, updated nightly with project values and addresses.",
@@ -384,7 +385,7 @@ totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tname
 <span class="stat"><b>{fmt(ctotal)}</b>total reported value</span>{phone_stat}</div>
 {permit_table(plist)}
 <p><strong>Know every contractor's next jobsite — the morning after the permit is filed.</strong><br>
-<a class="buy" href="{STRIPE_99}">Track all {label} permits — $99/mo</a></p>"""
+<a class="buy" href="{BASE}/subscribe/">Track all {label} permits — $99/mo</a></p>"""
             (d / "index.html").write_text(page(
                 f"{disp} — Permits in {label} ({month}) | JustPermitted",
                 f"{disp} pulled {len(plist)} recent commercial building permits in {label} worth {fmt(ctotal)}. See their projects and jobsite addresses.",
@@ -407,6 +408,7 @@ totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tname
             f"Live tracker of commercial building permits in {label}: values, addresses, contractors. Updated nightly.",
             cbody, "../"), encoding="utf-8")
         city_cards[ck] = f'<a class="card" href="{ck}/"><b>{label}</b><span>{len(cps)} recent permits · {fmt(city_total)} tracked</span></a>'
+        city_stats[ck] = (label, len(cps), fmt(city_total))
         sitemap_urls.append(f"{ck}/")
         print(f"[{ck}] {len(by_trade)} trade pages + {len([u for u in sitemap_urls if u.startswith(ck + '/contractors/')])} contractor pages + city index")
 
@@ -430,7 +432,7 @@ totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tname
 <h1>Your next job,<br>every morning at 7am.</h1>
 <p>We track every commercial building permit in your metro, tag it by trade, and send you the ones
 worth calling about — the week they're filed, before your competitors hear about them.</p>
-<a class="buy" href="#subscribe">See plans →</a>
+<a class="buy" href="subscribe/">See plans →</a>
 </div>
 <h2>Live coverage</h2>
 <p style="color:#64748b">One subscription covers your region's adjacent metros — a Las Vegas plan includes Henderson,
@@ -440,6 +442,78 @@ a Los Angeles plan can include Anaheim and Riverside. Just tell us at checkout.<
 <br><a href="equipment-rental/"><strong>For Equipment Rental companies →</strong></a> Every permit type is a rental signal.</p>
 {PLANS_HTML}""",
         "./"), encoding="utf-8")
+
+    # /subscribe picker page
+    metro_opts = '<option value="" selected>Choose your metro…</option>'
+    for rname, rcities in REGIONS:
+        group = "".join(
+            f'<option value="{ck}" data-stats="{html.escape(f"{city_stats[ck][1]} recent permits · {city_stats[ck][2]} tracked")}">{html.escape(city_stats[ck][0])}</option>'
+            for ck in rcities if ck in city_stats)
+        if group:
+            metro_opts += f'<optgroup label="{html.escape(rname)}">{group}</optgroup>'
+    trade_opts = '<option value="all" selected>All trades</option>' + "".join(
+        f'<option value="{k}">{html.escape(v)}</option>' for k, v in TRADE_LABELS.items() if k != "other")
+    sel_style = "width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;margin:6px 0 16px;background:#fff"
+    sub_body = f"""<div class="hero"><h1>Start your daily permit alerts</h1>
+<p>Three picks, one checkout — your first digest arrives tomorrow morning at 7am.</p></div>
+<div class="faq" style="max-width:560px">
+<b>Your metro</b>
+<select id="metro" style="{sel_style}">{metro_opts}</select>
+<div id="stats" style="color:#16a34a;font-weight:600;font-size:14px;margin:-8px 0 14px"></div>
+<b>Your trade</b>
+<select id="trade" style="{sel_style}">{trade_opts}</select>
+<b>Business type</b>
+<select id="biz" style="{sel_style}">
+<option value="contractor" selected>Contractor / Subcontractor</option>
+<option value="rental">Equipment Rental</option>
+<option value="supplier">Supplier / Distributor</option>
+<option value="service">Service Provider</option>
+<option value="other">Other</option>
+</select>
+</div>
+<div class="plans" style="max-width:760px">
+  <div class="plan">
+    <h3>Single Trade</h3>
+    <div class="price">$49<span class="per">/month</span></div>
+    <ul><li>Your metro, your trade only</li><li>Values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
+    <a class="buy" id="buy49" href="#" style="opacity:.5">Continue to checkout — $49/mo</a>
+  </div>
+  <div class="plan popular">
+    <span class="badge">MOST POPULAR</span>
+    <h3>All Trades</h3>
+    <div class="price">$99<span class="per">/month</span></div>
+    <ul><li>Your metro, every trade category</li><li>Values, addresses &amp; lead scores</li><li>Cancel anytime</li></ul>
+    <a class="buy" id="buy99" href="#" style="opacity:.5">Continue to checkout — $99/mo</a>
+  </div>
+</div>
+<p id="hint" style="color:#64748b;font-size:13.5px">Choose your metro above to continue.</p>
+<script>
+(function() {{
+  var m=document.getElementById('metro'),t=document.getElementById('trade'),b=document.getElementById('biz'),
+      s=document.getElementById('stats'),h=document.getElementById('hint'),
+      a49=document.getElementById('buy49'),a99=document.getElementById('buy99'),
+      U49='{STRIPE_49}',U99='{STRIPE_99}';
+  function upd() {{
+    var ck=m.value;
+    if(!ck) {{ s.textContent=''; a49.href=a99.href='#'; a49.style.opacity=a99.style.opacity=.5;
+      h.textContent='Choose your metro above to continue.'; return; }}
+    var o=m.options[m.selectedIndex];
+    s.textContent='\\u2713 '+o.text+' \\u2014 '+o.getAttribute('data-stats');
+    var ref=[ck,t.value,b.value].join('--').replace(/[^a-zA-Z0-9_-]/g,'');
+    a49.href=U49+'?client_reference_id='+ref;
+    a99.href=U99+'?client_reference_id='+ref;
+    a49.style.opacity=a99.style.opacity=1;
+    h.textContent='Your picks travel with your checkout automatically.';
+  }}
+  m.onchange=t.onchange=b.onchange=upd; upd();
+}})();
+</script>"""
+    (SITE / "subscribe").mkdir(parents=True, exist_ok=True)
+    (SITE / "subscribe" / "index.html").write_text(page(
+        "Subscribe | JustPermitted",
+        "Pick your metro and trade — daily commercial permit alerts in your inbox tomorrow at 7am.",
+        sub_body, "../"), encoding="utf-8")
+    sitemap_urls.append("subscribe/")
 
     (SITE / "plays").mkdir(parents=True, exist_ok=True)
     (SITE / "plays" / "index.html").write_text(page(
