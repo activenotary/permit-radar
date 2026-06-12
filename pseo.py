@@ -88,6 +88,12 @@ def display_name(name):
                lambda m: m.group(0).upper(), d)
     return re.sub(r"'S\b", "'s", d)
 
+def fmt_phone(ph):
+    d = re.sub(r"\D", "", str(ph or ""))
+    if len(d) == 10:
+        return f"({d[:3]}) {d[3:6]}-{d[6:]}"
+    return str(ph or "").strip()
+
 def permit_table(permits, limit=50):
     rows = "".join(f"""<tr><td style="white-space:nowrap">{p['issued_date']}</td>
 <td>{html.escape((p['summary'] or p['permit_type'] or '')[:140])}<br>
@@ -176,11 +182,13 @@ are being awarded right now.</p>
             d = SITE / ck / "contractors" / slug; d.mkdir(parents=True, exist_ok=True)
             tset = sorted({t for p in plist for t in json.loads(p["trades"] or "[]")})
             tnames = ", ".join(TRADE_LABELS.get(t, t.title()) for t in tset) or "General"
+            cphone = next((p.get("phone") for p in plist if p.get("phone")), "")
+            phone_stat = f'<span class="stat"><b>{html.escape(fmt_phone(cphone))}</b>phone (public record)</span>' if cphone else ""
             cb = f"""<h1>{html.escape(disp)} — Recent Permit Activity in {label}</h1>
 <p>{html.escape(disp)} pulled {len(plist)} commercial building permit{'s' if len(plist) != 1 else ''} in {label} recently,
 totaling {fmt(ctotal)} in reported project value. Work spans: {html.escape(tnames)}.</p>
 <div><span class="stat"><b>{len(plist)}</b>recent permits</span>
-<span class="stat"><b>{fmt(ctotal)}</b>total reported value</span></div>
+<span class="stat"><b>{fmt(ctotal)}</b>total reported value</span>{phone_stat}</div>
 {permit_table(plist)}
 <p><strong>Know every contractor's next jobsite — the morning after the permit is filed.</strong><br>
 <a class="buy" href="{STRIPE_99}">Track all {label} permits — $99/mo</a></p>"""
