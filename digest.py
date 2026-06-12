@@ -3,7 +3,7 @@
 in profiles.json (city + trades + min project value). Output: out/digests/.
 Sends via Resend when RESEND_API_KEY is set.
 """
-import html, json, sqlite3
+import html, json, re, sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -14,6 +14,12 @@ OUT = ROOT / "out" / "digests"; OUT.mkdir(parents=True, exist_ok=True)
 
 def fmt_value(v):
     return f"${v:,.0f}" if v else "n/a"
+
+def fmt_phone(ph):
+    d = re.sub(r"\D", "", str(ph or ""))
+    if len(d) == 10:
+        return f"({d[:3]}) {d[3:6]}-{d[6:]}"
+    return str(ph or "").strip()
 
 def matches(p, prof):
     if p["city"] != prof["city"]: return False
@@ -36,7 +42,7 @@ def build(prof, permits):
           <td style="padding:10px;border-bottom:1px solid #e5e7eb;">
             <strong>{html.escape(p['summary'] or p['permit_type'] or '')}</strong><br>
             <span style="color:#6b7280;font-size:13px;">{html.escape(p['address'] or '')} · issued {p['issued_date']}</span><br>
-            <span style="font-size:12px;color:#374151;">Trades: {html.escape(trades)}{(' · Contractor of record: ' + html.escape(p['contractor'])) if p['contractor'] else ''}</span></td>
+            <span style="font-size:12px;color:#374151;">Trades: {html.escape(trades)}{(' · Contractor of record: ' + html.escape(p['contractor'])) if p['contractor'] else ''}{(' · ☎ ' + html.escape(fmt_phone(p.get('phone')))) if p.get('phone') else ''}</span></td>
           <td style="padding:10px;border-bottom:1px solid #e5e7eb;white-space:nowrap;font-weight:600;">{fmt_value(p['value'])}</td>
         </tr>"""
     if not rows:
