@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Permit Radar — subscriber digests. Builds an HTML email digest per profile
-in profiles.json (city + trades + min project value). Output: out/digests/.
+in profiles.json (city/cities + trades + min project value). Output: out/digests/.
 Sends via Resend when RESEND_API_KEY is set.
 """
 import html, json, re, sqlite3
@@ -22,7 +22,8 @@ def fmt_phone(ph):
     return str(ph or "").strip()
 
 def matches(p, prof):
-    if p["city"] != prof["city"]: return False
+    cities = prof.get("cities") or ([prof["city"]] if prof.get("city") else [])
+    if p["city"] not in cities: return False
     if prof.get("min_value") and (p["value"] or 0) < prof["min_value"] and p["value"] is not None:
         pass  # keep null-value permits; drop only confirmed-low
     if prof.get("min_value") and p["value"] is not None and p["value"] < prof["min_value"]:
@@ -30,8 +31,13 @@ def matches(p, prof):
     trades = set(json.loads(p["trades"] or "[]"))
     return bool(trades & set(prof["trades"])) if prof.get("trades") else True
 
+def prof_label(prof):
+    cities = prof.get("cities") or ([prof["city"]] if prof.get("city") else [])
+    return prof.get("metro_label") or " + ".join(
+        CFG["cities"][c]["label"] for c in cities if c in CFG["cities"])
+
 def build(prof, permits):
-    label = CFG["cities"][prof["city"]]["label"]
+    label = prof_label(prof)
     rows = ""
     for p in permits[:25]:
         trades = ", ".join(json.loads(p["trades"] or "[]"))
@@ -67,7 +73,7 @@ def send_email(prof, html_body, n_hits):
     if not key or prof["email"].endswith("@example.com"):
         return False
     import requests
-    label = CFG["cities"][prof["city"]]["label"]
+    label = prof_label(prof)
     r = requests.post(
         "https://api.resend.com/emails",
         headers={"Authorization": f"Bearer {key}"},
