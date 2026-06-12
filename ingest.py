@@ -24,7 +24,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS permits (
   id TEXT PRIMARY KEY,            -- city:permit_id
   city TEXT, permit_id TEXT, permit_type TEXT, description TEXT,
-  issued_date TEXT, value REAL, address TEXT, contractor TEXT,
+  issued_date TEXT, value REAL, address TEXT, contractor TEXT, phone TEXT,
   lat REAL, lon REAL, raw_json TEXT,
   ingested_at TEXT,
   enriched INTEGER DEFAULT 0,
@@ -37,6 +37,10 @@ CREATE INDEX IF NOT EXISTS idx_enriched ON permits(enriched);
 def db():
     conn = sqlite3.connect(ROOT / CFG["db_path"])
     conn.executescript(SCHEMA)
+    try:
+        conn.execute("ALTER TABLE permits ADD COLUMN phone TEXT")
+    except sqlite3.OperationalError:
+        pass  # column already exists
     return conn
 
 def to_float(v):
@@ -69,6 +73,7 @@ def normalize(city_key, ccfg, rec):
         "value": to_float(rec.get(f.get("value"))),
         "address": address,
         "contractor": rec.get(f.get("contractor")) or "",
+        "phone": str(rec.get(f.get("phone")) or "").strip()[:40],
         "lat": to_float(rec.get(f.get("lat"))),
         "lon": to_float(rec.get(f.get("lon"))),
         "raw_json": json.dumps(rec)[:8000],
@@ -242,9 +247,9 @@ def upsert(conn, rows):
             continue
         conn.execute(
             """INSERT INTO permits (id,city,permit_id,permit_type,description,issued_date,
-               value,address,contractor,lat,lon,raw_json,ingested_at)
+               value,address,contractor,phone,lat,lon,raw_json,ingested_at)
                VALUES (:id,:city,:permit_id,:permit_type,:description,:issued_date,
-               :value,:address,:contractor,:lat,:lon,:raw_json,:ingested_at)""", row)
+               :value,:address,:contractor,:phone,:lat,:lon,:raw_json,:ingested_at)""", row)
         n += 1
     conn.commit()
     return n
@@ -275,6 +280,28 @@ def main():
         n = upsert(conn, (normalize(ck, ccfg, r) for r in records))
         print(f"[{ck}] {n} new permits stored")
         total += n
+
+    # backfill phones from stored raw records for cities that publish them
+    nb = 0
+    for ck in cities:
+        pf = CFG["cities"][ck].get("fields", {}).get("phone")
+        if not pf:
+            continue
+        rows = conn.execute(
+            "SELECT id, raw_json FROM permits WHERE city=? AND (phone IS NULL OR phone='')",
+            (ck,)).fetchall()
+        for rid, rj in rows:
+            try:
+                rec = json.loads(rj or "{}")
+            except ValueError:
+                continue
+            ph = str(rec.get(pf) or "").strip()[:40]
+            if ph:
+                conn.execute("UPDATE permits SET phone=? WHERE id=?", (ph, rid))
+                nb += 1
+    conn.commit()
+    if nb:
+        print(f"Backfilled {nb} phone numbers.")
     print(f"Done. {total} new permits.")
 
 if __name__ == "__main__":
