@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Permit Radar — ingestion. Pulls recent permits from city open-data APIs
-(Socrata SODA + ArcGIS REST + Carto SQL + custom city portals), normalizes
-to a common schema, upserts into SQLite.
+(Socrata SODA + ArcGIS REST + Carto SQL + CSV files + custom city portals),
+normalizes to a common schema, upserts into SQLite.
 
 Usage:
   python3 ingest.py                              # live pull, all cities
@@ -159,6 +159,40 @@ def fetch_live_riverside(city_key, ccfg, days):
         keep.append(rec)
     return keep
 
+def parse_any_date(s):
+    """Normalize '2026-06-03', '6/3/2026 12:00:00 AM', etc. to YYYY-MM-DD."""
+    s = (str(s) if s else "").strip()
+    if not s:
+        return ""
+    head = s.split()[0]
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%m-%d-%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(head, fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+    return head[:10]
+
+def fetch_live_csv(city_key, ccfg, days):
+    """Daily CSV-file feeds (San Jose, San Diego). Downloads the file,
+    filters client-side by issue date and optional equals-filters."""
+    if requests is None:
+        sys.exit("pip install requests")
+    import csv, io
+    r = requests.get(ccfg["url"], timeout=180, allow_redirects=True)
+    r.raise_for_status()
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+    eq = ccfg.get("equals", {})
+    out = []
+    for rec in csv.DictReader(io.StringIO(r.text)):
+        if any((rec.get(k) or "").strip() != v for k, v in eq.items()):
+            continue
+        d = parse_any_date(rec.get(ccfg["issued_field"]))
+        if not d or d < since:
+            continue
+        rec[ccfg["issued_field"]] = d  # normalized for downstream
+        out.append(rec)
+    return out
+
 def fetch_live_carto(city_key, ccfg, days):
     """Carto SQL API feeds (Philadelphia)."""
     if requests is None:
@@ -180,6 +214,8 @@ def fetch_live(city_key, ccfg, days):
         return fetch_live_riverside(city_key, ccfg, days)
     if ccfg.get("api") == "carto":
         return fetch_live_carto(city_key, ccfg, days)
+    if ccfg.get("api") == "csv":
+        return fetch_live_csv(city_key, ccfg, days)
     if requests is None:
         sys.exit("pip install requests")
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT00:00:00.000")
