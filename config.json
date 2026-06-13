@@ -286,6 +286,65 @@
       },
       "address_fields": ["gx_location"]
     },
+    "lacounty": {
+      "label": "LA County (Unincorporated)",
+      "api": "arcgis",
+      "endpoint": "https://services.arcgis.com/RmCCgQtiZLDCtblq/arcgis/rest/services/EPIC-LA_Case_History_view/FeatureServer/0/query",
+      "issued_field": "ISSUANCE_DATE",
+      "extra_where": "CASENAME LIKE '%Building%' AND CASENAME NOT LIKE '%Residential%'",
+      "fields": {
+        "permit_id": "CASENUMBER",
+        "permit_type": "WORKCLASS_NAME",
+        "description": "DESCRIPTION",
+        "value": "PERMIT_VALUATION"
+      },
+      "address_fields": ["MAIN_ADDRESS"]
+    },
+    "corona": {
+      "label": "Corona, CA",
+      "domain": "corstat.coronaca.gov",
+      "dataset": "2agx-camz",
+      "issued_field": "issued",
+      "extra_where": "permittype like 'COMMERCIAL%'",
+      "lookback_days": 14,
+      "fields": {
+        "permit_id": "permit_no",
+        "permit_type": "permittype",
+        "description": "description",
+        "value": "jobvalue"
+      },
+      "address_fields": ["site_addr"]
+    },
+    "newportbeach": {
+      "label": "Newport Beach, CA",
+      "api": "arcgis",
+      "endpoint": "https://nbgis.newportbeachca.gov/arcgis/rest/services/DashBuildingPermits/FeatureServer/0/query",
+      "issued_field": "DATE_B",
+      "extra_where": "NUMBER_KEY LIKE 'XC%'",
+      "lookback_days": 30,
+      "fields": {
+        "permit_id": "NUMBER_KEY",
+        "permit_type": "SUB_TYPE_TEXT",
+        "description": "DESCRIP",
+        "value": "VAL_TOTAL"
+      },
+      "address_fields": ["ADDS"]
+    },
+    "santamonica": {
+      "label": "Santa Monica, CA",
+      "api": "csv",
+      "url": "https://data.santamonica.gov/datastore/dump/d6867c7d-89bc-4975-be35-4d2673a4764b",
+      "issued_field": "date_issued",
+      "equals": {"status": "Issued"},
+      "lookback_days": 30,
+      "fields": {
+        "permit_id": "permit_number",
+        "permit_type": "permit_type_desc",
+        "description": "description",
+        "value": "valuation"
+      },
+      "address_fields": ["address"]
+    },
     "sandiego": {
       "label": "San Diego, CA",
       "api": "csv",
