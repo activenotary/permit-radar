@@ -13,7 +13,7 @@ STRIPE_49 = "https://buy.stripe.com/28E4gy3XF9h80Ded8IfMA00"   # 1 Metro, 1 Trad
 STRIPE_99 = "https://buy.stripe.com/cNi6oGbq71OGadO5GgfMA01"   # 1 Metro, All Trades
 
 REGIONS = [
-    ("Southern California", ["losangeles", "anaheim", "riverside", "sandiego"]),
+    ("Southern California", ["losangeles", "lacounty", "santamonica", "anaheim", "newportbeach", "riverside", "corona", "sandiego"]),
     ("Northern California", ["sanfrancisco", "sanjose", "sacramento"]),
     ("Nevada", ["lasvegas", "henderson"]),
     ("Arizona", ["tucson"]),
@@ -26,7 +26,7 @@ REGIONS = [
 ]
 
 SALES_METROS = [
-    ("greater-la", "Greater Los Angeles", "LA, Orange County & the Inland Empire", ["losangeles", "anaheim", "riverside"]),
+    ("greater-la", "Greater Los Angeles", "LA, Orange County & the Inland Empire", ["losangeles", "lacounty", "santamonica", "anaheim", "newportbeach", "riverside", "corona"]),
     ("san-diego", "San Diego County", "", ["sandiego"]),
     ("bay-area", "Bay Area", "San Francisco & San Jose", ["sanfrancisco", "sanjose"]),
     ("sacramento", "Sacramento / Central CA", "", ["sacramento"]),
@@ -267,10 +267,11 @@ A few cities (such as Las Vegas and Riverside) refresh their public records week
 we're exactly as fast as the city itself. Either way, you see it the morning after it appears.</p></div>
 
 <div class="faq"><b>Which metros do you cover?</b>
-<p>Greater Los Angeles (LA, Orange County &amp; the Inland Empire), the Bay Area (San Francisco &amp; San Jose),
-Sacramento, Las Vegas Valley (Las Vegas &amp; Henderson), Tucson, Austin, Seattle, Denver, Chicago, Nashville,
-New Orleans, Miami-Dade, New York City and Philadelphia — and growing. One subscription covers your whole metro,
-every city in it. Don't see yours? Email us — if your city publishes permit records, we can usually add it within days.</p></div>
+<p>Greater Los Angeles (LA, LA County, Santa Monica, Anaheim, Newport Beach, Riverside &amp; Corona),
+the Bay Area (San Francisco &amp; San Jose), Sacramento, Las Vegas Valley (Las Vegas &amp; Henderson),
+Tucson, Austin, Seattle, Denver, Chicago, Nashville, New Orleans, Miami-Dade, New York City and Philadelphia —
+and growing. One subscription covers your whole metro, every city in it. Don't see yours?
+Email us — if your city publishes permit records, we can usually add it within days.</p></div>
 
 <div class="faq"><b>What's in each lead?</b>
 <p>Project description, jobsite address, reported dollar value, issue date, the contractor of record,
@@ -453,8 +454,9 @@ worth calling about — the week they're filed, before your competitors hear abo
 <a class="buy" href="subscribe/">See plans →</a>
 </div>
 <h2>Live coverage</h2>
-<p style="color:#64748b">One subscription covers your whole metro — Greater Los Angeles includes LA, Orange County
-and the Inland Empire; Las Vegas Valley includes Henderson; the Bay Area includes San Francisco and San Jose.</p>
+<p style="color:#64748b">One subscription covers your whole metro — Greater Los Angeles includes LA, LA County,
+Santa Monica, Anaheim, Newport Beach, Riverside and Corona; Las Vegas Valley includes Henderson; the Bay Area
+includes San Francisco and San Jose.</p>
 {region_html}
 <p><a href="plays/"><strong>The Commercial Permit Playbook →</strong></a> Six ways businesses turn permit data into contracts — with real permits from our live feeds.
 <br><a href="equipment-rental/"><strong>For Equipment Rental companies →</strong></a> Every permit type is a rental signal.</p>
