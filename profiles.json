@@ -42,5 +42,14 @@
       "windows_doors", "elevator", "fencing", "other"
     ],
     "min_value": 0
+  },
+  {
+    "name": "Reginald Dennery",
+    "email": "homefixturesusa@gmail.com",
+    "city": "newyork",
+    "trades": [
+      "general_renovation"
+    ],
+    "min_value": 0
   }
 ]
