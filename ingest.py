@@ -76,7 +76,7 @@ def normalize(city_key, ccfg, rec):
         "phone": str(rec.get(f.get("phone")) or "").strip()[:40],
         "lat": to_float(rec.get(f.get("lat"))),
         "lon": to_float(rec.get(f.get("lon"))),
-        "raw_json": json.dumps(rec)[:8000],
+        "raw_json": None,  # not stored: it bloated permits.db past GitHub's 100 MB limit; phone is captured above
         "ingested_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -302,6 +302,16 @@ def main():
     conn.commit()
     if nb:
         print(f"Backfilled {nb} phone numbers.")
+
+    # Prune permits older than 120 days so permits.db stays bounded.
+    # GitHub rejects files over 100 MB; the DB crossed that in Aug 2026 and every
+    # nightly push was silently rejected until it was shrunk.
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=120)).strftime("%Y-%m-%d")
+    pruned = conn.execute("DELETE FROM permits WHERE issued_date < ?", (cutoff,)).rowcount
+    conn.commit()
+    if pruned:
+        conn.execute("VACUUM")  # reclaim space so the file actually shrinks on disk
+        print(f"Pruned {pruned} permits older than {cutoff}.")
     print(f"Done. {total} new permits.")
 
 if __name__ == "__main__":
